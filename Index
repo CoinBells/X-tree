@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KOC X-Tree Training (EN / AR)</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #101010;
+    font-family: Arial, sans-serif;
+    color: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .container {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+    max-width: 1200px;
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .tree-panel, .hud-panel, .objectives-panel {
+    border: 1px solid #444;
+    background: #1b1b1b;
+    padding: 15px;
+    box-sizing: border-box;
+  }
+
+  .tree-panel {
+    flex: 1.4;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .hud-panel {
+    flex: 0.9;
+  }
+
+  .objectives-panel {
+    flex: 1.1;
+  }
+
+  h2 {
+    margin-top: 0;
+    font-size: 16px;
+    text-align: center;
+  }
+
+  .valve, .bean {
+    display: inline-block;
+    padding: 6px 10px;
+    font-size: 11px;
+    margin: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .valve {
+    border: 2px solid #a5451f;
+    border-radius: 50px;
+    background: #2b1a14;
+  }
+
+  .valve.open {
+    box-shadow: 0 0 8px #02ff02;
+    border-color: #02ff02;
+  }
+
+  .valve.closed {
+    box-shadow: 0 0 8px #ff2222;
+    border-color: #ff4444;
+  }
+
+  .bean {
+    border: 2px solid #bbbbbb;
+    border-radius: 8px;
+    background: #242424;
+  }
+
+  .bean.removed {
+    box-shadow: 0 0 10px #ffaa00;
+    border-color: #ffaa00;
+  }
+
+  .center-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .center-block {
+    width: 40px;
+    height: 40px;
+    background: #777;
+    margin: 6px auto;
+  }
+
+  .tubing-line {
+    width: 4px;
+    background: #888;
+    height: 12px;
+    margin: 0 auto;
+  }
+
+  .cross-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+
+  .side-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .gauge {
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+
+  .status {
+    margin-top: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+
+  .status.normal   { background: #1e2b1e; border: 1px solid #2d6a2d; }
+  .status.flowing  { background: #142735; border: 1px solid #2080c0; }
+  .status.blocked  { background: #302318; border: 1px solid #ff9800; }
+  .status.removed  { background: #33241a; border: 1px solid #ffb347; }
+  .status.shutin   { background: #2c1a1a; border: 1px solid #ff4444; }
+
+  .lang-switch {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .lang-switch button {
+    margin: 0 3px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid #555;
+    background: #222;
+    color: #eee;
+  }
+
+  .lang-switch button.active {
+    background: #eeeeee;
+    color: #111;
+    font-weight: bold;
+  }
+
+  .tips {
+    font-size: 11px;
+    opacity: 0.8;
+    margin-top: 8px;
+  }
+
+  ul {
+    padding-left: 20px;
+    margin-top: 5px;
+    font-size: 13px;
+  }
+
+  /* لدعم انعكاس النص العربي عند اختيار AR */
+  .rtl {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* منطقة شخصية العامل */
+  .operator-panel {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .operator-figure {
+    width: 80px;
+    height: 140px;
+    position: relative;
+  }
+
+  /* رسم عامل بسيط بـ CSS (بدون صور خارجية) */
+  .operator-body {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 80px;
+    background: #1f3f70;  /* coverall أزرق */
+    border-radius: 6px;
+  }
+
+  .operator-head {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 32px;
+    background: #f0d2a4;  /* لون الوجه */
+    border-radius: 50%;
+    border: 2px solid #e0c090;
+  }
+
+  .operator-helmet {
+    position: absolute;
+    bottom: 96px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 20px;
+    background: #e4c200;  /* خوذة صفراء */
+    border-radius: 50% 50% 20% 20%;
+    border: 2px solid #c5a800;
+  }
+
+  .operator-leg-left,
+  .operator-leg-right {
+    position: absolute;
+    bottom: 0;
+    width: 14px;
+    height: 30px;
+    background: #1f3f70;
+  }
+
+  .operator-leg-left {
+    left: 45%;
+    transform: translateX(-50%);
+  }
+
+  .operator-leg-right {
+    left: 55%;
+    transform: translateX(-50%);
+  }
+
+  .operator-boot-left,
+  .operator-boot-right {
+    position: absolute;
+    bottom: -6px;
+    width: 16px;
+    height: 8px;
+    background: #4b2d16;
+    border-radius: 4px;
+  }
+
+  .operator-boot-left {
+    left: 43%;
+    transform: translateX(-50%);
+  }
+
+  .operator-boot-right {
+    left: 57%;
+    transform: translateX(-50%);
+  }
+
+  .operator-arm-right {
+    position: absolute;
+    bottom: 45px;
+    right: -10px;
+    width: 20px;
+    height: 10px;
+    background: #1f3f70;
+    border-radius: 8px;
+    transform-origin: left center;
+    transform: rotate(10deg);
+  }
+
+  .operator-dialog {
+    max-width: 260px;
+    font-size: 11px;
+    background: #222;
+    border-radius: 8px;
+    padding: 8px;
+    border: 1px solid #555;
+    text-align: left;
+    position: relative;
+  }
+
+  .operator-dialog::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    bottom: 10px;
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent #555 transparent transparent;
+  }
+
+  .operator-dialog.rtl {
+    text-align: right;
+  }
+
+  .operator-dialog.rtl::before {
+    left: auto;
+    right: -8px;
+    border-color: transparent transparent transparent #555;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- اللوحة الرئيسية: X-Tree + العامل -->
+  <div class="tree-panel">
+    <div>
+      <h2 id="title-tree">KOC X-Tree (Training Layout)</h2>
+
+      <div class="center-stack">
+        <div class="valve closed" id="upper-master">UPPER MASTER</div>
+        <div class="tubing-line"></div>
+
+        <div class="valve closed" id="middle-master">MIDDLE MASTER</div>
+        <div class="tubing-line"></div>
+
+        <div class="valve closed" id="lower-master">LOWER MASTER</div>
+
+        <div class="center-block"></div>
+      </div>
+
+      <div class="cross-row">
+        <!-- LEFT SIDE -->
+        <div class="side-block">
+          <div class="valve closed" id="upstream-left">UPSTREAM LEFT</div>
+          <div class="bean" id="bean-box">BEAN BOX</div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="side-block">
+          <div class="valve open" id="upstream-right">UPSTREAM RIGHT</div>
+          <div class="bean" id="adj-bean">ADJ BEAN</div>
+        </div>
+      </div>
+
+      <div class="tips" id="click-tip">
+        Click UPSTREAM RIGHT or ADJ BEAN to interact.
+      </div>
+    </div>
+
+    <!-- شخصية العامل -->
+    <div class="operator-panel">
+      <div class="operator-figure">
+        <div class="operator-body"></div>
+        <div class="operator-head"></div>
+        <div class="operator-helmet"></div>
+        <div class="operator-leg-left"></div>
+        <div class="operator-leg-right"></div>
+        <div class="operator-boot-left"></div>
+        <div class="operator-boot-right"></div>
+        <div class="operator-arm-right"></div>
+      </div>
+      <div class="operator-dialog" id="operator-dialog">
+        I am the field operator. Follow the steps on the right to handle the choke safely.
+      </div>
+    </div>
+  </div>
+
+  <!-- HUD: الضغوط والحالة -->
+  <div class="hud-panel">
+    <div class="lang-switch">
+      <button id="btn-en" class="active">EN</button>
+      <button id="btn-ar">ع</button>
+    </div>
+
+    <h2 id="hud-title">Pressures & Status</h2>
+
+    <div class="gauge" id="whp-label">WHP: 300 psi</div>
+    <div class="gauge" id="flp-label">FLP: 150 psi</div>
+
+    <div class="status flowing" id="status-label">
+      Flowing – normal operation.
+    </div>
+
+    <div class="tips" id="status-tip">
+      Open UPSTREAM RIGHT with choke installed → normal flow. Closed upstream or removed choke will change WHP & FLP.
+    </div>
+  </div>
+
+  <!-- لوحة الأهداف -->
+  <div class="objectives-panel" id="objectives-panel">
+    <h2 id="objectives-title">Training Objectives</h2>
+    <ul id="objectives-list">
+      <li>Check WHP &amp; FLP readings.</li>
+      <li>Close UPSTREAM RIGHT before removing the choke.</li>
+      <li>Click on ADJ BEAN to remove the choke.</li>
+      <li>Inspect the choke for blockage.</li>
+      <li>Re-install the choke and open UPSTREAM RIGHT.</li>
+      <li>Confirm WHP &amp; FLP are back to normal.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  // حالة البئر
+  let state = {
+    lang: 'en',
+    upstreamRightOpen: true,
+    chokeRemoved: false,
+    chokeBlocked: true   // نفترض في البداية فيه انسداد جزئي
+  };
+
+  // عناصر DOM
+  const whpLabel     = document.getElementById('whp-label');
+  const flpLabel     = document.getElementById('flp-label');
+  const statusLabel  = document.getElementById('status-label');
+  const statusTip    = document.getElementById('status-tip');
+  const titleTree    = document.getElementById('title-tree');
+  const hudTitle     = document.getElementById('hud-title');
+  const objectivesTitle = document.getElementById('objectives-title');
+  const objectivesList  = document.getElementById('objectives-list');
+  const objectivesPanel = document.getElementById('objectives-panel');
+  const clickTip        = document.getElementById('click-tip');
+  const operatorDialog  = document.getElementById('operator-dialog');
+
+  const upstreamRight = document.getElementById('upstream-right');
+  const adjBean       = document.getElementById('adj-bean');
+
+  const btnEN = document.getElementById('btn-en');
+  const btnAR = document.getElementById('btn-ar');
+
+  // نصوص باللغتين
+  const texts = {
+    en: {
+      titleTree: "KOC X-Tree (Training Layout)",
+      hudTitle: "Pressures & Status",
+      clickTip: "Click UPSTREAM RIGHT or ADJ BEAN to interact.",
+      whp: (v) => `WHP: ${v} psi`,
+      flp: (v) => `FLP: ${v} psi`,
+      status: {
+        normal: "Normal well state.",
+        flowing: "Flowing – normal operation.",
+        suspected_blockage: "Suspected choke blockage.",
+        choke_removed: "Choke removed – line isolated.",
+        shut_in: "Well shut-in."
+      },
+      statusTip_normal:
+        "Open UPSTREAM RIGHT with a clean choke installed → WHP & FLP show normal flow.",
+      statusTip_blocked:
+        "High WHP with low FLP can indicate choke blockage. Remove and inspect the choke.",
+      statusTip_removed:
+        "With the upstream valve closed and choke removed, WHP and FLP should read zero.",
+      statusTip_shutin:
+        "When upstream valve is closed and choke installed, WHP increases and FLP goes to zero.",
+      objectivesTitle: "Training Objectives",
+      objectivesHTML: `
+        <li>Check WHP &amp; FLP readings.</li>
+        <li>Close UPSTREAM RIGHT before removing the choke.</li>
+        <li>Click on ADJ BEAN to remove the choke.</li>
+        <li>Inspect the choke for blockage.</li>
+        <li>Re-install the choke and open UPSTREAM RIGHT.</li>
+        <li>Confirm WHP &amp; FLP are back to normal.</li>
+      `,
+      operatorDialogs: {
+        flowing: "I see normal WHP and FLP. The well is flowing properly with a clean choke.",
+        suspected_blockage: "WHP is high and FLP is low. I suspect choke blockage, we should close upstream and pull the choke.",
+        choke_removed: "Upstream is closed and the choke is removed. WHP and FLP are zero, it is safe to inspect the choke.",
+        shut_in: "Upstream is closed with the choke installed. WHP is building up while FLP is zero – classic shut-in condition.",
+        normal: "Follow the training steps to learn how to handle the choke and monitor pressures."
+      }
+    },
+    ar: {
+      titleTree: "شجرة البئر (X-Tree) للتدريب",
+      hudTitle: "الضغوط وحالة البئر",
+      clickTip: "اضغط على UPSTREAM RIGHT أو ADJ BEAN للتفاعل.",
+      whp: (v) => `ضغط رأس البئر WHP: ${v} psi`,
+      flp: (v) => `ضغط خط الجريان FLP: ${v} psi`,
+      status: {
+        normal: "حالة البئر طبيعية.",
+        flowing: "البئر ينتج بشكل طبيعي.",
+        suspected_blockage: "يُشتبه بوجود انسداد في الجوك (choke).",
+        choke_removed: "تم نزع الجوك – الخط معزول.",
+        shut_in: "البئر مغلق (Shut-in)."
+      },
+      statusTip_normal:
+        "فتح UPSTREAM RIGHT مع وجود جوك نظيف مركّب → WHP و FLP يظهران تدفقاً طبيعياً.",
+      statusTip_blocked:
+        "ارتفاع WHP مع انخفاض FLP قد يدل على انسداد في الجوك. يجب نزع الجوك وفحصه.",
+      statusTip_removed:
+        "عند إغلاق فالف UPSTREAM ونزع الجوك، يجب أن تكون قراءات WHP و FLP صفر تقريباً.",
+      statusTip_shutin:
+        "عند إغلاق UPSTREAM مع وجود الجوك في مكانه، يرتفع WHP وينعدم FLP.",
+      objectivesTitle: "أهداف التدريب",
+      objectivesHTML: `
+        <li>التأكد من قراءات WHP و FLP.</li>
+        <li>إغلاق فالف UPSTREAM RIGHT قبل نزع الجوك.</li>
+        <li>الضغط على ADJ BEAN لنزع الجوك.</li>
+        <li>فحص الجوك والتأكد من وجود انسداد أو لا.</li>
+        <li>إعادة تركيب الجوك وفتح UPSTREAM RIGHT.</li>
+        <li>التأكد من عودة قراءات WHP و FLP للوضع الطبيعي.</li>
+      `,
+      operatorDialogs: {
+        flowing: "أشوف WHP و FLP طبيعيين، البئر ينتج بشكل سليم والجوك نظيف.",
+        suspected_blockage: "WHP مرتفع و FLP منخفض، غالباً فيه انسداد في الجوك. لازم نسكر الـ UPSTREAM ونطلع الجوك.",
+        choke_removed: "الـ UPSTREAM مسكّر والجوك منزوعة، WHP و FLP على الصفر، الوضع آمن لفحص الجوك.",
+        shut_in: "الـ UPSTREAM مسكّر والجوك في مكانها، WHP يرتفع و FLP صفر – حالة Shut-in.",
+        normal: "اتبع خطوات التدريب عشان تتعلم كيف تتعامل مع الجوك ومراقبة الضغوط بشكل صحيح."
+      }
+    }
+  };
+
+  function updateUI() {
+    const lang = state.lang;
+    const t = texts[lang];
+
+    titleTree.textContent = t.titleTree;
+    hudTitle.textContent = t.hudTitle;
+    clickTip.textContent = t.clickTip;
+    objectivesTitle.textContent = t.objectivesTitle;
+    objectivesList.innerHTML = t.objectivesHTML;
+
+    // اتجاه النص العربي للأهداف وفقاعة العامل
+    if (lang === 'ar') {
+      objectivesPanel.classList.add('rtl');
+      operatorDialog.classList.add('rtl');
+    } else {
+      objectivesPanel.classList.remove('rtl');
+      operatorDialog.classList.remove('rtl');
+    }
+
+    // حساب WHP / FLP / الحالة
+    let whp, flp, statusKey;
+
+    if (state.chokeRemoved) {
+      whp = 0;
+      flp = 0;
+      statusKey = 'choke_removed';
+    } else if (!state.upstreamRightOpen) {
+      // Shut-in
+      whp = 350;
+      flp = 0;
+      statusKey = 'shut_in';
+    } else {
+      // Upstream مفتوح
+      if (state.chokeBlocked) {
+        whp = 380;
+        flp = 80;
+        statusKey = 'suspected_blockage';
+      } else {
+        whp = 300;
+        flp = 150;
+        statusKey = 'flowing';
+      }
+    }
+
+    whpLabel.textContent = t.whp(whp);
+    flpLabel.textContent = t.flp(flp);
+
+    const statusText = t.status[statusKey] || '';
+    statusLabel.textContent = statusText;
+
+    // كلاس الحالة
+    statusLabel.className = 'status';
+    if (statusKey === 'flowing' || statusKey === 'normal') {
+      statusLabel.classList.add('flowing');
+      statusTip.textContent = t.statusTip_normal;
+    } else if (statusKey === 'suspected_blockage') {
+      statusLabel.classList.add('blocked');
+      statusTip.textContent = t.statusTip_blocked;
+    } else if (statusKey === 'choke_removed') {
+      statusLabel.classList.add('removed');
+      statusTip.textContent = t.statusTip_removed;
+    } else if (statusKey === 'shut_in') {
+      statusLabel.classList.add('shutin');
+      statusTip.textContent = t.statusTip_shutin;
+    }
+
+    // شكل الفالف والجوك حسب الحالة
+    upstreamRight.classList.remove('open', 'closed');
+    upstreamRight.classList.add(state.upstreamRightOpen ? 'open' : 'closed');
+
+    adjBean.classList.toggle('removed', state.chokeRemoved);
+
+    // حوار العامل
+    const opDialogs = t.operatorDialogs;
+    operatorDialog.textContent = opDialogs[statusKey] || opDialogs.normal;
+
+    // أزرار اللغة
+    if (lang === 'en') {
+      btnEN.classList.add('active');
+      btnAR.classList.remove('active');
+    } else {
+      btnEN.classList.remove('active');
+      btnAR.classList.add('active');
+    }
+  }
+
+  // تفاعل UPSTREAM RIGHT
+  upstreamRight.addEventListener('click', () => {
+    state.upstreamRightOpen = !state.upstreamRightOpen;
+    updateUI();
+  });
+
+  // تفاعل ADJ BEAN (رفع/تركيب الجوك + تنظيفه)
+  adjBean.addEventListener('click', () => {
+    if (!state.chokeRemoved) {
+      // نزع الجوك
+      state.chokeRemoved = true;
+    } else {
+      // إعادة الجوك وتركيب جوك نظيف (نعتبره cleaned → no blockage)
+      state.chokeRemoved = false;
+      state.chokeBlocked = false;
+    }
+    updateUI();
+  });
+
+  // تغيير اللغة
+  btnEN.addEventListener('click', () => {
+    state.lang = 'en';
+    updateUI();
+  });
+
+  btnAR.addEventListener('click', () => {
+    state.lang = 'ar';
+    updateUI();
+  });
+
+  // تحديث أولي
+  updateUI();
+</script>
+
+</body>
+</html>
