@@ -2,28 +2,35 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>KOC Wellhead Game – X-Tree Training</title>
+<title>KOC Wellhead Game – Desert Training</title>
 <style>
   body{
     margin:0;
-    background:#101010;
+    background:#0b1116;
     color:#eee;
-    font-family:Arial,sans-serif;
+    font-family:Arial,Helvetica,sans-serif;
     display:flex;
     flex-direction:column;
     align-items:center;
   }
+
   #gameContainer{
     margin-top:10px;
   }
+
   canvas{
-    background:#151515;
-    border:1px solid #444;
-    touch-action:none;
+    width:100%;
+    max-width:950px;
+    height:auto;
+    background:linear-gradient(to bottom,#9fc7ff 0%,#d6e8ff 35%,#f2d9a0 36%,#d3b074 100%);
+    border:3px solid #222;
+    image-rendering:pixelated;
+    box-shadow:0 0 12px rgba(0,0,0,0.7);
   }
+
   .hud{
-    margin-top:8px;
-    max-width:900px;
+    margin-top:10px;
+    max-width:950px;
     width:100%;
     font-size:12px;
     display:flex;
@@ -31,40 +38,70 @@
     justify-content:space-between;
     gap:6px;
   }
+
   .hud-block{
-    flex:1 1 220px;
+    flex:1 1 260px;
     border:1px solid #444;
-    background:#1b1b1b;
-    padding:6px 8px;
+    background:#151a1f;
+    padding:8px;
     box-sizing:border-box;
   }
+
   .hud-title{
     font-weight:bold;
-    text-align:center;
+    text-align:left;
     margin-bottom:4px;
     font-size:13px;
+    color:#f2d9a0;
   }
+
+  .hud-block p{
+    margin:2px 0;
+  }
+
   .lang-switch{
-    text-align:center;
+    text-align:right;
     margin-bottom:4px;
   }
+
   .lang-switch button{
-    margin:0 3px;
+    margin-left:4px;
     padding:2px 8px;
     font-size:11px;
-    border:1px solid #555;
-    background:#222;
+    border:1px solid #777;
+    background:#242b33;
     color:#eee;
     cursor:pointer;
   }
+
   .lang-switch .active{
-    background:#eee;
+    background:#f2d9a0;
     color:#111;
     font-weight:bold;
   }
+
   .rtl{
     direction:rtl;
     text-align:right;
+  }
+
+  #pressureText,#statusText,#objText,#msgText{
+    line-height:1.5;
+  }
+
+  #statusText{
+    margin-top:4px;
+    color:#dcdcdc;
+  }
+
+  #controlHint{
+    margin-top:6px;
+    font-size:11px;
+    color:#aaa;
+  }
+
+  @media (max-width:720px){
+    .hud-block{flex:1 1 100%;}
   }
 </style>
 </head>
@@ -77,8 +114,8 @@
 <div class="hud">
   <div class="hud-block" id="hud-info">
     <div class="hud-title" id="hudTitle">Well Pressures</div>
-    <div id="pressureText">WHP: 380 psi<br>FLP: 80 psi</div>
-    <div style="margin-top:4px;" id="statusText">Suspected choke blockage.</div>
+    <p id="pressureText">WHP: 380 psi<br>FLP: 80 psi</p>
+    <p id="statusText">Suspected choke blockage.</p>
   </div>
 
   <div class="hud-block" id="hud-obj">
@@ -86,39 +123,38 @@
       <button id="btnEn" class="active">EN</button>
       <button id="btnAr">ع</button>
     </div>
-    <div class="hud-title" id="objTitle">Objectives</div>
-    <div id="objText"></div>
+    <div class="hud-title" id="objTitle">Training Objectives</div>
+    <p id="objText"></p>
   </div>
 
   <div class="hud-block" id="hud-msg">
     <div class="hud-title" id="msgTitle">Field Operator</div>
-    <div id="msgText"></div>
-    <div style="margin-top:4px;font-size:11px;" id="controlHint">
-      Move: Arrows / WASD – Action: E – Restart: R
-    </div>
+    <p id="msgText"></p>
+    <p id="controlHint">Move: Arrows / WASD – Action: E – Restart: R</p>
   </div>
 </div>
 
 <script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
 
-const hudTitle    = document.getElementById('hudTitle');
-const pressureText= document.getElementById('pressureText');
-const statusText  = document.getElementById('statusText');
-const objTitle    = document.getElementById('objTitle');
-const objText     = document.getElementById('objText');
-const msgTitle    = document.getElementById('msgTitle');
-const msgText     = document.getElementById('msgText');
-const btnEn       = document.getElementById('btnEn');
-const btnAr       = document.getElementById('btnAr');
-const hudObj      = document.getElementById('hud-obj');
-const hudMsg      = document.getElementById('hud-msg');
+const hudTitle=document.getElementById('hudTitle');
+const pressureText=document.getElementById('pressureText');
+const statusText=document.getElementById('statusText');
+const objTitle=document.getElementById('objTitle');
+const objText=document.getElementById('objText');
+const msgTitle=document.getElementById('msgTitle');
+const msgText=document.getElementById('msgText');
+const btnEn=document.getElementById('btnEn');
+const btnAr=document.getElementById('btnAr');
+const hudObj=document.getElementById('hud-obj');
+const hudMsg=document.getElementById('hud-msg');
+const controlHint=document.getElementById('controlHint');
 
 const texts={
   en:{
     hudTitle:"Well Pressures",
-    objTitle:"Objectives",
+    objTitle:"Training Objectives",
     msgTitle:"Field Operator",
     pressure:(W,F)=>`WHP: ${W} psi<br>FLP: ${F} psi`,
     status:{
@@ -130,30 +166,30 @@ const texts={
     },
     objectives:{
       1:`• WHP high, FLP low → suspect choke blockage.<br>
-• Walk to UPSTREAM valve and press E to close it.<br>
-• Walk to ADJ BEAN and press E to pull the choke.<br>
-• Press E again at ADJ BEAN to install a clean choke.<br>
+• Walk to UPSTREAM valve and press [E] to close it.<br>
+• Walk to ADJ BEAN and press [E] to pull the choke.<br>
+• Press [E] again at ADJ BEAN to install a clean choke.<br>
 • Open UPSTREAM again and confirm pressures are normal.`,
       2:`• Keep the well flowing with a clean choke.<br>
-• Walk to DRAIN SAMPLE valve on the hook-up and press E (flush line).<br>
-• Walk to the bottle and press E to place it.<br>
-• Press E again at DRAIN SAMPLE to fill the bottle.<br>
-• Close the drain by pressing E once more.`,
+• Walk to DRAIN SAMPLE valve on the hook-up and press [E] to flush the line.<br>
+• Walk to the bottle and press [E] to place it under the outlet.<br>
+• Press [E] again at DRAIN SAMPLE to fill the bottle.<br>
+• Press [E] again to close the drain valve.`,
       3:`Training complete. You diagnosed blockage, cleaned the choke,
 and took a drain sample safely.`
     },
     operator:{
-      intro:"I am the field operator. Move to the X-Tree and follow the objectives.",
+      intro:"I'm the field operator. Walk to the wellhead and follow the objectives.",
       s1_start:"Stage 1: WHP is high and FLP is low – I suspect choke blockage. Close UPSTREAM then pull the choke.",
       s1_wrong:"Never pull the choke with UPSTREAM open. Close the valve first.",
       s1_removed:"Choke is out. After cleaning, install a clean choke and reopen UPSTREAM.",
-      s1_done:"Good, pressures look normal again. Now we will take a drain sample from the hook-up.",
+      s1_done:"Good, pressures are normal again. Now we will take a drain sample from the hook-up.",
       s2_start:"Stage 2: First flush the drain line, then place the bottle and collect the sample.",
-      s2_flush:"Line is flushing… short controlled flow.",
+      s2_flush:"Drain line flushing… short controlled flow.",
       s2_bottle:"Bottle in place. Open the drain again to fill it – just enough for the lab.",
       s2_needclose:"Close the drain valve. We never leave a drain open.",
-      s2_done:"Sample collected and drain closed. Job done clean and safe.",
-      finished:"Training complete – nice work.",
+      s2_done:"Sample collected and drain closed. Clean and safe job.",
+      finished:"Training complete – well done."
     },
     controlHint:"Move: Arrows / WASD – Action: E – Restart: R"
   },
@@ -171,36 +207,36 @@ and took a drain sample safely.`
     },
     objectives:{
       1:`• WHP عالي و FLP منخفض → اشتباه انسداد.<br>
-• تحرّك إلى فالف UPSTREAM واضغط E لإغلاقه.<br>
-• تحرّك إلى ADJ BEAN واضغط E لنزع الجوك.<br>
-• اضغط E مرة أخرى عند ADJ BEAN لتركيب جوك نظيف.<br>
+• تحرّك إلى فالف UPSTREAM واضغط [E] لإغلاقه.<br>
+• تحرّك إلى ADJ BEAN واضغط [E] لنزع الجوك.<br>
+• اضغط [E] مرة أخرى عند ADJ BEAN لتركيب جوك نظيف.<br>
 • افتح UPSTREAM مرة ثانية وتأكد أن الضغوط طبيعية.`,
-      2:`• خلّ البئر في وضع إنتاج مع جوك نظيف.<br>
-• تحرّك إلى فالف DRAIN SAMPLE على الـ hook-up واضغط E (تفريغ الخط).<br>
-• تحرّك إلى القنينة واضغط E لوضعها تحت المخرج.<br>
-• اضغط E مرة ثانية عند DRAIN SAMPLE لملء القنينة.<br>
-• اغلق فالف الـ Drain بالضغط على E مرة ثالثة.`,
+      2:`• خلي البئر في وضع إنتاج مع جوك نظيف.<br>
+• تحرّك إلى فالف DRAIN SAMPLE على الـ hook-up واضغط [E] لتفريغ الخط.<br>
+• تحرّك إلى قنينة العينة واضغط [E] لوضعها تحت المخرج.<br>
+• اضغط [E] على DRAIN SAMPLE لتعبئة القنينة.<br>
+• اضغط [E] مرة أخيرة لإغلاق فالف الـ Drain.`,
       3:`تم إنهاء التدريب. شخّصت الانسداد، نظّفت الجوك، وأخذت Drain Sample بطريقة آمنة.`
     },
     operator:{
       intro:"أنا الفيلد أوبريتر. تحرّك إلى شجرة البئر واتبع الأهداف على اليمين.",
-      s1_start:"المرحلة 1: WHP عالي و FLP منخفض – نشتبه في انسداد الجوك. نسكّر UPSTREAM وبعدين نطلع الجوك.",
+      s1_start:"المرحلة 1: WHP عالي و FLP منخفض – نشتبه في انسداد الجوك. نسكّر UPSTREAM ثم نطلع الجوك.",
       s1_wrong:"ما نطلع الجوك والـ UPSTREAM مفتوح أبدًا. أول شي نسكّر الفالف.",
-      s1_removed:"الجوك طالع. بعد ما تنظّفه ركب جوك نظيف وافتح الـ UPSTREAM.",
-      s1_done:"ممتاز، الضغوط رجعت طبيعية. الحين ناخذ Drain Sample من الـ hook-up.",
-      s2_start:"المرحلة 2: أولاً نفرغ خط الـ Drain، بعدين نحط القنينة ونجمع العينة.",
-      s2_flush:"جاري تفريغ الخط… فلو بسيط ومتحكَّم فيه.",
-      s2_bottle:"القنينة في مكانها. افتح الـ Drain مرة ثانية لتمتلئ – كمية كافية للمختبر.",
-      s2_needclose:"سكّر فالف الـ Drain. ما نتركه مفتوح.",
+      s1_removed:"الجوك طالع. بعد تنظيفه ركب جوك نظيف وافتح UPSTREAM.",
+      s1_done:"الضغوط رجعت طبيعية. الحين ننتقل إلى أخذ Drain Sample من الـ hook-up.",
+      s2_start:"المرحلة 2: نفرّغ خط الـ Drain، بعدين نحط القنينة ونجمع العينة.",
+      s2_flush:"جاري تفريغ خط الـ Drain… فلو بسيط ومتحكَّم فيه.",
+      s2_bottle:"القنينة في مكانها. افتح الـ Drain مرة ثانية لتمتلئ بكمية كافية للمختبر.",
+      s2_needclose:"سكّر فالف الـ Drain، ما نتركه مفتوح.",
       s2_done:"العينة جاهزة والـ Drain مقفول. شغل نظيف.",
-      finished:"التدريب انتهى – شغلك ممتاز.",
+      finished:"التدريب انتهى – شغلك ممتاز."
     },
     controlHint:"الحركة: الأسهم / WASD – تنفيذ: E – إعادة: R"
   }
 };
 
-let lang='ar';   // نبدأ بالعربي
-let stage=1;     // 1: choke, 2: drain, 3: done
+let lang="ar";
+let stage=1;
 let upstreamOpen=true;
 let chokeInstalled=true;
 let chokeBlocked=true;
@@ -209,49 +245,43 @@ let drainFlushed=false;
 let bottlePlaced=false;
 let sampleCollected=false;
 
-// اللاعب
-const player={x:120,y:360,speed:2.2};
+const player={x:130,y:360,speed:2.0};
 
-// مناطق التفاعل (ثابتة تقريباً في الرسم)
 const zones={
-  upstream:{x:600,y:220,r:40},
-  adj:{x:640,y:320,r:40},
-  drain:{x:760,y:260,r:40},
-  bottle:{x:790,y:330,r:35}
+  upstream:{x:600,y:220,r:38},
+  adj:{x:640,y:320,r:38},
+  drain:{x:760,y:260,r:38},
+  bottle:{x:790,y:330,r:34}
 };
 
 const keys={};
-window.addEventListener('keydown',e=>{
+window.addEventListener("keydown",e=>{
   keys[e.key.toLowerCase()]=true;
-  if(e.key==='r' || e.key==='R') resetGame();
+  if(e.key==="r"||e.key==="R") resetGame();
 });
-window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+window.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false;});
 
-// ضغط/FLP حسب الحالة
 function getPressures(){
-  if(!chokeInstalled) return {whp:0,flp:0,status:'removed'};
-  if(!upstreamOpen)  return {whp:350,flp:0,status:'shutin'};
-  if(chokeBlocked)   return {whp:380,flp:80,status:'blocked'};
-  // choke نظيف
-  if(stage===2 && (drainOpen || sampleCollected)) return {whp:300,flp:140,status:'sampling'};
-  return {whp:300,flp:150,status:'flowing'};
+  if(!chokeInstalled) return {whp:0,flp:0,status:"removed"};
+  if(!upstreamOpen)  return {whp:350,flp:0,status:"shutin"};
+  if(chokeBlocked)   return {whp:380,flp:80,status:"blocked"};
+  if(stage===2 && (drainOpen || sampleCollected)) return {whp:300,flp:140,status:"sampling"};
+  return {whp:300,flp:150,status:"flowing"};
 }
 
-// تحديث HUD
-function updateHUD(customMsg){
+function updateHUD(custom){
   const t=texts[lang];
   const p=getPressures();
   hudTitle.textContent=t.hudTitle;
   objTitle.textContent=t.objTitle;
   msgTitle.textContent=t.msgTitle;
   pressureText.innerHTML=t.pressure(p.whp,p.flp);
-  statusText.textContent=t.status[p.status]||'';
-
+  statusText.textContent=t.status[p.status]||"";
   objText.innerHTML=t.objectives[stage];
-  document.getElementById('controlHint').textContent=t.controlHint;
+  controlHint.textContent=t.controlHint;
 
   let msg=t.operator.intro;
-  if(customMsg) msg=customMsg;
+  if(custom) msg=custom;
   else{
     if(stage===1){
       if(!chokeInstalled) msg=t.operator.s1_removed;
@@ -269,83 +299,70 @@ function updateHUD(customMsg){
   }
   msgText.textContent=msg;
 
-  // RTL
-  if(lang==='ar'){
-    hudObj.classList.add('rtl');
-    hudMsg.classList.add('rtl');
+  if(lang==="ar"){
+    hudObj.classList.add("rtl");
+    hudMsg.classList.add("rtl");
   }else{
-    hudObj.classList.remove('rtl');
-    hudMsg.classList.remove('rtl');
+    hudObj.classList.remove("rtl");
+    hudMsg.classList.remove("rtl");
   }
 }
 
-// حركة اللاعب
 function updatePlayer(){
   let dx=0,dy=0;
-  if(keys['arrowup']||keys['w']) dy-=1;
-  if(keys['arrowdown']||keys['s']) dy+=1;
-  if(keys['arrowleft']||keys['a']) dx-=1;
-  if(keys['arrowright']||keys['d']) dx+=1;
+  if(keys["arrowup"]||keys["w"]) dy-=1;
+  if(keys["arrowdown"]||keys["s"]) dy+=1;
+  if(keys["arrowleft"]||keys["a"]) dx-=1;
+  if(keys["arrowright"]||keys["d"]) dx+=1;
   if(dx||dy){
     const len=Math.hypot(dx,dy)||1;
     dx/=len; dy/=len;
     player.x+=dx*player.speed;
     player.y+=dy*player.speed;
   }
-  // حدود الكانفس
   player.x=Math.max(40,Math.min(canvas.width-40,player.x));
-  player.y=Math.max(60,Math.min(canvas.height-30,player.y));
+  player.y=Math.max(80,Math.min(canvas.height-25,player.y));
 }
 
-// المسافة
 function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
 
-// تنفيذ زر E
-window.addEventListener('keydown',e=>{
-  if(e.key.toLowerCase()!=='e') return;
+window.addEventListener("keydown",e=>{
+  if(e.key.toLowerCase()!=="e") return;
   handleAction();
 });
 
 function handleAction(){
   const t=texts[lang];
-  // أقرب زون
   const pos={x:player.x,y:player.y};
   const dUp=dist(pos,zones.upstream);
   const dAdj=dist(pos,zones.adj);
   const dDr=dist(pos,zones.drain);
   const dBo=dist(pos,zones.bottle);
-
   let msgOverride=null;
 
-  // UPSTREAM
   if(dUp<zones.upstream.r){
     upstreamOpen=!upstreamOpen;
     updateHUD();
     return;
   }
 
-  // ADJ BEAN (الجوك)
-  if(dAdj<zones.adj.r){
-    if(stage===1 || stage===2){
-      if(chokeInstalled){
-        if(upstreamOpen){
-          msgOverride=t.operator.s1_wrong;
-        }else{
-          chokeInstalled=false;
-        }
+  if(dAdj<zones.adj.r && (stage===1||stage===2)){
+    if(chokeInstalled){
+      if(upstreamOpen){
+        msgOverride=t.operator.s1_wrong;
       }else{
-        chokeInstalled=true;
-        chokeBlocked=false; // نعتبره نظيف بعد التركيب
+        chokeInstalled=false;
       }
-      updateHUD(msgOverride);
-      checkStages();
-      return;
+    }else{
+      chokeInstalled=true;
+      chokeBlocked=false;
     }
+    updateHUD(msgOverride);
+    checkStages();
+    return;
   }
 
-  // DRAIN SAMPLE
   if(dDr<zones.drain.r && stage===2){
-    // أول مرة → flush
     if(!drainFlushed){
       drainFlushed=true;
       drainOpen=true;
@@ -363,7 +380,6 @@ function handleAction(){
     return;
   }
 
-  // قنينة العينة
   if(dBo<zones.bottle.r && stage===2){
     bottlePlaced=true;
     updateHUD(t.operator.s2_bottle);
@@ -371,7 +387,6 @@ function handleAction(){
   }
 }
 
-// انتقال المراحل
 function checkStages(){
   if(stage===1 && upstreamOpen && chokeInstalled && !chokeBlocked){
     stage=2;
@@ -381,107 +396,142 @@ function checkStages(){
   }
 }
 
-// رسم بسيط
+function drawDesert(){
+  // السماء والخلفية جاهزة من الـ background; نضيف تلال رمل
+  ctx.fillStyle="#e8c985";
+  ctx.fillRect(0,330,canvas.width,40);
+  ctx.fillStyle="#d2b274";
+  ctx.fillRect(0,360,canvas.width,140);
+
+  // تلال
+  ctx.fillStyle="#e2c07e";
+  ctx.beginPath();
+  ctx.moveTo(50,360);
+  ctx.lineTo(170,320);
+  ctx.lineTo(260,360);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(380,360);
+  ctx.lineTo(520,310);
+  ctx.lineTo(650,360);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(680,360);
+  ctx.lineTo(820,330);
+  ctx.lineTo(920,360);
+  ctx.closePath();
+  ctx.fill();
+
+  // ظل بسيط
+  ctx.fillStyle="rgba(0,0,0,0.15)";
+  ctx.fillRect(0,360,canvas.width,8);
+}
+
+function drawWellhead(){
+  // أنابيب X-tree
+  ctx.fillStyle="#b7c1c9";
+  ctx.fillRect(636,150,8,180);         // vertical
+  ctx.fillRect(586,220,100,8);         // cross
+  // hook-up
+  ctx.fillRect(700,250,120,8);
+  // drain line
+  ctx.fillRect(816,250,8,60);
+}
+
+// رسم دائرة فالف مربّع ستايل بكسل
+function drawValve(zone,color,label){
+  ctx.fillStyle="#111";
+  ctx.fillRect(zone.x-24,zone.y-24,48,48);
+  ctx.fillStyle=color;
+  ctx.fillRect(zone.x-20,zone.y-20,40,40);
+  ctx.fillStyle="#000";
+  ctx.font="9px Arial";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  const parts=label.split("\n");
+  ctx.fillText(parts[0],zone.x,zone.y-5);
+  if(parts[1]) ctx.fillText(parts[1],zone.x,zone.y+6);
+}
+
+function drawBottle(){
+  ctx.fillStyle="#111";
+  ctx.fillRect(zones.bottle.x-10,zones.bottle.y-20,20,30);
+  ctx.fillStyle="#f5f5ff";
+  ctx.fillRect(zones.bottle.x-8,zones.bottle.y-18,16,26);
+  if(sampleCollected){
+    ctx.fillStyle="#b47a3a";
+    ctx.fillRect(zones.bottle.x-8,zones.bottle.y-4,16,12);
+  }
+}
+
+function drawPlayer(){
+  // جسم العامل – استايل بسيط
+  ctx.fillStyle="#2053a3";
+  ctx.fillRect(player.x-8,player.y-26,16,24);
+  // رأس
+  ctx.fillStyle="#f0d2a4";
+  ctx.fillRect(player.x-8,player.y-42,16,16);
+  // خوذة
+  ctx.fillStyle="#f5d35b";
+  ctx.fillRect(player.x-10,player.y-46,20,8);
+  ctx.fillStyle="#e2b73d";
+  ctx.fillRect(player.x-10,player.y-46,20,3);
+  // أرجل
+  ctx.fillStyle="#2053a3";
+  ctx.fillRect(player.x-8,player.y-2,6,8);
+  ctx.fillRect(player.x+2,player.y-2,6,8);
+  // أحذية
+  ctx.fillStyle="#333";
+  ctx.fillRect(player.x-8,player.y+6,6,4);
+  ctx.fillRect(player.x+2,player.y+6,6,4);
+}
+
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // أرض
-  ctx.fillStyle="#202020";
-  ctx.fillRect(0,380,canvas.width,120);
+  drawDesert();
+  drawWellhead();
 
-  // X-tree (عمودي)
-  ctx.strokeStyle="#888";
-  ctx.lineWidth=8;
-  ctx.beginPath();
-  ctx.moveTo(640,120);
-  ctx.lineTo(640,340);
-  ctx.stroke();
-
-  // cross arms
-  ctx.beginPath();
-  ctx.moveTo(580,220);
-  ctx.lineTo(700,220);
-  ctx.stroke();
-
-  // hook-up line
-  ctx.beginPath();
-  ctx.moveTo(700,250);
-  ctx.lineTo(820,250);
-  ctx.stroke();
-
-  // drain drop line
-  ctx.beginPath();
-  ctx.moveTo(820,250);
-  ctx.lineTo(820,310);
-  ctx.stroke();
-
-  // draw zones helper (اختياري تخفيفاً، نرسم دوائر خفيفة)
-  function drawValveCircle(x,y,color,label){
-    ctx.fillStyle=color;
-    ctx.beginPath();
-    ctx.arc(x,y,22,0,Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle="#000";
-    ctx.lineWidth=2;
-    ctx.stroke();
-    ctx.fillStyle="#fff";
-    ctx.font="10px Arial";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    const line1=label.split("\n")[0];
-    const line2=label.split("\n")[1]||"";
-    ctx.fillText(line1,x,y-4);
-    if(line2) ctx.fillText(line2,x,y+7);
-  }
-
-  // colors حسب الحالة
-  const colUp=upstreamOpen?"#00b845":"#b80000";
-  const colAdj=!chokeInstalled?"#ffaa00":(chokeBlocked?"#b80000":"#00b845");
   const p=getPressures();
-  const colDrain=stage===2?(drainOpen?"#00c8ff":"#888"):"#555";
+  const colUp=upstreamOpen?"#1fc46d":"#c43939";
+  const colAdj=!chokeInstalled?"#e3b33b":(chokeBlocked?"#c43939":"#1fc46d");
+  const colDr=stage===2?(drainOpen?"#31bde3":"#d0d4d8"):"#a0a4a8";
 
-  drawValveCircle(zones.upstream.x,zones.upstream.y,colUp,"UP-\nSTREAM");
-  drawValveCircle(zones.adj.x,zones.adj.y,colAdj,"ADJ\nBEAN");
-  drawValveCircle(zones.drain.x,zones.drain.y,colDrain,"DRAIN\nSAMPLE");
+  drawValve(zones.upstream,colUp,"UP\nSTREAM");
+  drawValve(zones.adj,colAdj,"ADJ\nBEAN");
+  drawValve(zones.drain,colDr,"DRAIN\nSAMPLE");
 
-  // bottle
-  ctx.fillStyle="#999";
-  ctx.fillRect(zones.bottle.x-10,zones.bottle.y-20,20,28);
-  ctx.strokeStyle="#000";
-  ctx.strokeRect(zones.bottle.x-10,zones.bottle.y-20,20,28);
-  if(sampleCollected){
-    ctx.fillStyle="#90501f";
-    ctx.fillRect(zones.bottle.x-8,zones.bottle.y-6,16,12);
-  }
-
-  // player (العامل)
-  // الجسم
-  ctx.fillStyle="#1f3f70";
-  ctx.fillRect(player.x-10,player.y-28,20,28);
-  // الرأس
-  ctx.fillStyle="#f0d2a4";
-  ctx.beginPath();
-  ctx.arc(player.x,player.y-38,10,0,Math.PI*2);
-  ctx.fill();
-  // الخوذة
-  ctx.fillStyle="#e4c200";
-  ctx.beginPath();
-  ctx.arc(player.x,player.y-42,12,Math.PI,0);
-  ctx.fill();
-  // رجلين
-  ctx.fillStyle="#1f3f70";
-  ctx.fillRect(player.x-10,player.y-0,6,10);
-  ctx.fillRect(player.x+4,player.y-0,6,10);
+  drawBottle();
+  drawPlayer();
 
   requestAnimationFrame(loop);
 }
 
+function updatePlayerLoop(){
+  let dx=0,dy=0;
+  if(keys["arrowup"]||keys["w"]) dy-=1;
+  if(keys["arrowdown"]||keys["s"]) dy+=1;
+  if(keys["arrowleft"]||keys["a"]) dx-=1;
+  if(keys["arrowright"]||keys["d"]) dx+=1;
+  if(dx||dy){
+    const len=Math.hypot(dx,dy)||1;
+    dx/=len; dy/=len;
+    player.x+=dx*player.speed;
+    player.y+=dy*player.speed;
+  }
+  player.x=Math.max(40,Math.min(canvas.width-40,player.x));
+  player.y=Math.max(80,Math.min(canvas.height-25,player.y));
+}
+
 function loop(){
-  updatePlayer();
+  updatePlayerLoop();
   draw();
 }
 
-// إعادة تعيين
 function resetGame(){
   stage=1;
   upstreamOpen=true;
@@ -491,27 +541,27 @@ function resetGame(){
   drainFlushed=false;
   bottlePlaced=false;
   sampleCollected=false;
-  player.x=120; player.y=360;
+  player.x=130;
+  player.y=360;
   updateHUD(texts[lang].operator.intro);
 }
 
-// تغيير اللغة
 btnEn.onclick=()=>{
-  lang='en';
-  btnEn.classList.add('active');
-  btnAr.classList.remove('active');
+  lang="en";
+  btnEn.classList.add("active");
+  btnAr.classList.remove("active");
   updateHUD();
 };
 btnAr.onclick=()=>{
-  lang='ar';
-  btnAr.classList.add('active');
-  btnEn.classList.remove('active');
+  lang="ar";
+  btnAr.classList.add("active");
+  btnEn.classList.remove("active");
   updateHUD();
 };
 
-// تشغيل
 resetGame();
 requestAnimationFrame(loop);
 </script>
+
 </body>
 </html>
