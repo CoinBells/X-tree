@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <title>🛢️ KOC X-Tree Training — Realistic 3D</title>
   <style>
-    * {
-      box-sizing: border-box;
-      direction: rtl;
-    }
+    * { box-sizing: border-box; direction: rtl; }
     html, body {
       margin: 0;
       padding: 0;
@@ -18,14 +15,12 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #fff;
     }
-    /* خلي الكانفس فل سكرين خلف الـ HUD */
     canvas {
       position: fixed;
       inset: 0;
       display: block;
       z-index: 0;
     }
-
     #hud {
       position: fixed;
       top: 10px;
@@ -40,16 +35,9 @@
       backdrop-filter: blur(7px);
       z-index: 10;
     }
-    #hud h1 {
-      font-size: 15px;
-      margin: 0 0 3px 0;
-    }
-    #hud p {
-      margin: 3px 0;
-    }
-    #hud small {
-      opacity: 0.75;
-    }
+    #hud h1 { font-size: 15px; margin: 0 0 3px 0; }
+    #hud p  { margin: 3px 0; }
+    #hud small { opacity: 0.75; }
     #objectiveText {
       margin-top: 4px;
       font-weight: 600;
@@ -60,10 +48,7 @@
       padding: 0;
       margin: 4px 0 2px 0;
     }
-    #steps li {
-      margin: 1px 0;
-      font-size: 12px;
-    }
+    #steps li { margin: 1px 0; font-size: 12px; }
     .pending::before { content: "○ "; color: #999; }
     .active::before  { content: "● "; color: #ffd27f; }
     .done::before    { content: "✔ "; color: #4caf50; }
@@ -76,14 +61,8 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       cursor: pointer;
     }
-    #gaugesPanel h3 {
-      margin: 0 0 3px 0;
-      font-size: 13px;
-    }
-    #gaugesPanel p {
-      margin: 1px 0;
-      font-size: 12px;
-    }
+    #gaugesPanel h3 { margin: 0 0 3px 0; font-size: 13px; }
+    #gaugesPanel p  { margin: 1px 0; font-size: 12px; }
 
     #statusBar {
       margin-top: 5px;
@@ -115,14 +94,8 @@
       box-shadow: 0 0 28px rgba(0,0,0,0.7);
       max-width: 90vw;
     }
-    #completeOverlay h2 {
-      margin: 0 0 6px 0;
-      font-size: 18px;
-    }
-    #completeOverlay p {
-      margin: 4px 0;
-      font-size: 13px;
-    }
+    #completeOverlay h2 { margin: 0 0 6px 0; font-size: 18px; }
+    #completeOverlay p  { margin: 4px 0; font-size: 13px; }
     #completeOverlay button {
       margin-top: 10px;
       padding: 6px 15px;
@@ -134,29 +107,31 @@
       font-weight: 600;
       font-size: 13px;
     }
-    #completeOverlay button:hover {
-      background: #3f9144;
+    #completeOverlay button:hover { background: #3f9144; }
+
+    #debugMsg {
+      position: fixed;
+      bottom: 8px;
+      left: 8px;
+      padding: 6px 10px;
+      background: rgba(160, 30, 30, 0.95);
+      color: #fff;
+      font-size: 11px;
+      border-radius: 6px;
+      z-index: 30;
+      display: none;
     }
 
     @media (max-width: 600px) {
-      #hud {
-        left: 10px;
-        width: auto;
-      }
-      #hud h1 {
-        font-size: 14px;
-      }
+      #hud { left: 10px; width: auto; }
+      #hud h1 { font-size: 14px; }
     }
   </style>
 </head>
 <body>
   <div id="hud">
     <h1>🛢️ KOC X-Tree Training — 3D واقعي</h1>
-    <p>
-      <small>
-        محاكاة واقعية لشجرة البئر والـ Hook-Up لتدريب الفيلد أوبريتر على WHP / FLP / Choke / Drain Sample.
-      </small>
-    </p>
+    <p><small>محاكاة واقعية لشجرة البئر والـ Hook-Up لتدريب الفيلد أوبريتر على WHP / FLP / Choke / Drain Sample.</small></p>
     <p id="objectiveText"></p>
     <ul id="steps">
       <li id="step1" class="active">1- قراءة WHP &amp; FLP من شاشة القياسات</li>
@@ -180,24 +155,22 @@
   <div id="completeOverlay">
     <div class="box">
       <h2>✅ التدريب اكتمل بنجاح</h2>
-      <p>
-        نفذت كل خطوات الفيلد أوبريتر على الـ X-Tree والـ Hook-Up:
-        تشخيص انسداد الـ Choke وأخذ Drain Sample بأمان.
-      </p>
+      <p>نفذت كل خطوات الفيلد أوبريتر على الـ X-Tree والـ Hook-Up: تشخيص انسداد الـ Choke وأخذ Drain Sample بأمان.</p>
       <button onclick="restartTraining()">إعادة التجربة</button>
     </div>
   </div>
 
-  <!-- Three.js -->
-  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+  <div id="debugMsg"></div>
+
+  <!-- Three.js من jsDelivr -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
   <script>
     let scene, camera, renderer, controls;
     let raycaster, pointer;
     const interactiveObjects = [];
 
-    // حالة اللعبة
     let gameStep = 0;
     let whp = 360;
     let flp = 35;
@@ -207,10 +180,11 @@
     let sampleTaken = false;
 
     const objectiveText = document.getElementById("objectiveText");
-    const gaugeValues = document.getElementById("gaugeValues");
-    const gaugeStatus = document.getElementById("gaugeStatus");
-    const statusBar   = document.getElementById("statusBar");
+    const gaugeValues   = document.getElementById("gaugeValues");
+    const gaugeStatus   = document.getElementById("gaugeStatus");
+    const statusBar     = document.getElementById("statusBar");
     const completeOverlay = document.getElementById("completeOverlay");
+    const debugMsg      = document.getElementById("debugMsg");
 
     const stepEls = {
       1: document.getElementById("step1"),
@@ -297,9 +271,9 @@
       sampleTaken = false;
 
       interactiveObjects.forEach(obj => {
-        if (obj.userData.type === "upstream") obj.material.color.set(0x00b894); // أخضر
-        if (obj.userData.type === "choke")    obj.material.color.set(0xffc107); // أصفر
-        if (obj.userData.type === "drain")    obj.material.color.set(0x87cefa); // أزرق فاتح
+        if (obj.userData.type === "upstream") obj.material.color.set(0x00b894);
+        if (obj.userData.type === "choke")    obj.material.color.set(0xffc107);
+        if (obj.userData.type === "drain")    obj.material.color.set(0x87cefa);
       });
 
       updateObjective();
@@ -307,7 +281,6 @@
       setStatus("تمت إعادة ضبط التدريب.", "#9effc0");
     }
 
-    // HUD panel click = قراءة القياسات
     document.getElementById("gaugesPanel").addEventListener("click", () => {
       if (gameStep === 0) {
         setStatus("قراءة WHP و FLP من شاشة القياسات...", "#ffd27f");
@@ -322,7 +295,7 @@
 
     function initScene() {
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xb9e4ff); // سما كويت
+      scene.background = new THREE.Color(0xb9e4ff);
 
       camera = new THREE.PerspectiveCamera(
         60,
@@ -336,7 +309,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio * 0.8, 1.6));
       document.body.appendChild(renderer.domElement);
-      // تأكيد أن الكانفس فل سكرين
       renderer.domElement.style.position = "fixed";
       renderer.domElement.style.inset = "0";
       renderer.domElement.style.zIndex = "0";
@@ -350,7 +322,6 @@
       controls.maxPolarAngle = Math.PI / 2.1;
       controls.update();
 
-      // إضاءة
       const hemiLight = new THREE.HemisphereLight(0xffffee, 0xb89b6a, 0.7);
       hemiLight.position.set(0, 40, 0);
       scene.add(hemiLight);
@@ -359,7 +330,6 @@
       sun.position.set(25, 35, 10);
       scene.add(sun);
 
-      // أرضية صحراوية
       const groundGeo = new THREE.PlaneGeometry(120, 120, 32, 32);
       const groundMat = new THREE.MeshStandardMaterial({
         color: 0xd8be8e,
@@ -371,7 +341,6 @@
       ground.position.y = 0;
       scene.add(ground);
 
-      // تلال بسيطة
       for (let i = 0; i < 18; i++) {
         const hillGeo = new THREE.ConeGeometry(
           0.8 + Math.random() * 1.8,
@@ -392,7 +361,6 @@
         scene.add(hill);
       }
 
-      // منصة خرسانية
       const padGeo = new THREE.BoxGeometry(10, 0.4, 10);
       const padMat = new THREE.MeshStandardMaterial({
         color: 0x9c9c9c,
@@ -403,7 +371,6 @@
       pad.position.set(0, 0.2, 0);
       scene.add(pad);
 
-      // قاعدة الشجرة
       const baseGeo = new THREE.CylinderGeometry(1.2, 1.4, 0.6, 14);
       const baseMat = new THREE.MeshStandardMaterial({
         color: 0x5b6067,
@@ -414,7 +381,6 @@
       base.position.set(0, 0.7, 0);
       scene.add(base);
 
-      // أنبوب رأسي
       const vertGeo = new THREE.CylinderGeometry(0.3, 0.3, 4.5, 14);
       const vertMat = new THREE.MeshStandardMaterial({
         color: 0xb3b3b3,
@@ -425,14 +391,12 @@
       vertPipe.position.set(0, 3.0, 0);
       scene.add(vertPipe);
 
-      // مادة صدأ للصمامات
       const rustMat = new THREE.MeshStandardMaterial({
         color: 0x8a4c2c,
         metalness: 0.3,
         roughness: 0.8
       });
 
-      // handwheel صدئة + valve
       function createRustValve(y, sideOffset) {
         const group = new THREE.Group();
 
@@ -456,12 +420,10 @@
         scene.add(group);
       }
 
-      // الصمامات الرأسية مثل الصورة الأولى
-      createRustValve(4.0, 0); // upper
-      createRustValve(3.0, 0); // middle
-      createRustValve(2.0, 0); // lower
+      createRustValve(4.0, 0);
+      createRustValve(3.0, 0);
+      createRustValve(2.0, 0);
 
-      // أذرع جانبية
       const armGeo = new THREE.CylinderGeometry(0.22, 0.22, 3.2, 14);
       const armMat = new THREE.MeshStandardMaterial({
         color: 0xb3b3b3,
@@ -479,13 +441,11 @@
       rightArm.position.set(1.7, 3.0, 0);
       scene.add(rightArm);
 
-      // صمام جانبي يسار (غير تفاعلي)
       createRustValve(3.0, -3.0);
 
-      // Upstream valve يمين (تفاعلي)
       const upValveBodyGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.5, 16);
       const upValveMat = new THREE.MeshStandardMaterial({
-        color: 0x00b894, // أخضر = مفتوح
+        color: 0x00b894,
         metalness: 0.6,
         roughness: 0.35
       });
@@ -508,8 +468,6 @@
       upWheel.userData.type = "upstream";
       interactiveObjects.push(upWheel);
       scene.add(upWheel);
-
-      // Hook-Up / Flowline assembly
 
       const lineSteelMat = new THREE.MeshStandardMaterial({
         color: 0xd0d8e0,
@@ -578,7 +536,6 @@
       interactiveObjects.push(drainValve);
       scene.add(drainValve);
 
-      // لوحة القياسات 3D
       const gaugePanelGeo = new THREE.BoxGeometry(2.0, 1.2, 0.16);
       const gaugePanelMat = new THREE.MeshStandardMaterial({
         color: 0x111a26,
@@ -603,7 +560,6 @@
       leg2.position.set(-5.6, 2.0, 3.5);
       scene.add(leg2);
 
-      // raycaster + pointer
       raycaster = new THREE.Raycaster();
       pointer = new THREE.Vector2();
 
@@ -616,6 +572,7 @@
     }
 
     function onPointerDown(event) {
+      if (!renderer) return;
       const rect = renderer.domElement.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
@@ -655,7 +612,7 @@
         }
         if (!upstreamClosed) {
           upstreamClosed = true;
-          obj.material.color.set(0xe53935); // أحمر = مغلق
+          obj.material.color.set(0xe53935);
           setStatus("تم إغلاق صمام Upstream بنجاح.", "#9effc0");
           if (gameStep === 1) {
             gameStep = 2;
@@ -677,7 +634,7 @@
           whp = 300;
           flp = 280;
           casingPressure = 55;
-          obj.material.color.set(0x43a047); // أخضر / نظيف
+          obj.material.color.set(0x43a047);
           updateGaugesText();
           setStatus("تم فك وتنظيف الـ Choke. FLP الآن قريب من WHP.", "#9effc0");
           if (gameStep === 2) {
@@ -722,6 +679,7 @@
     }
 
     function onWindowResize() {
+      if (!camera || !renderer) return;
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -729,12 +687,27 @@
 
     function animate() {
       requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
+      if (controls && renderer && scene && camera) {
+        controls.update();
+        renderer.render(scene, camera);
+      }
     }
 
-    initScene();
-    animate();
+    // تشغيل بعد تحميل الصفحة + التأكد من توفر THREE
+    window.addEventListener("load", function () {
+      if (typeof THREE === "undefined") {
+        debugMsg.style.display = "block";
+        debugMsg.textContent = "Three.js لم يتم تحميله (تأكد من الاتصال أو من الـ CDN).";
+        return;
+      }
+      try {
+        initScene();
+        animate();
+      } catch (e) {
+        debugMsg.style.display = "block";
+        debugMsg.textContent = "حدث خطأ في تشغيل المحاكاة: " + e.message;
+      }
+    });
   </script>
 </body>
 </html>
