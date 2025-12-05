@@ -4,14 +4,28 @@
   <meta charset="UTF-8" />
   <title>🛢️ KOC X-Tree Training — Realistic 3D</title>
   <style>
-    * { box-sizing: border-box; direction: rtl; }
-    body {
+    * {
+      box-sizing: border-box;
+      direction: rtl;
+    }
+    html, body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #11141f;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #fff;
     }
+    /* خلي الكانفس فل سكرين خلف الـ HUD */
+    canvas {
+      position: fixed;
+      inset: 0;
+      display: block;
+      z-index: 0;
+    }
+
     #hud {
       position: fixed;
       top: 10px;
@@ -26,16 +40,30 @@
       backdrop-filter: blur(7px);
       z-index: 10;
     }
-    #hud h1 { font-size: 15px; margin: 0 0 3px 0; }
-    #hud p { margin: 3px 0; }
-    #hud small { opacity: 0.75; }
+    #hud h1 {
+      font-size: 15px;
+      margin: 0 0 3px 0;
+    }
+    #hud p {
+      margin: 3px 0;
+    }
+    #hud small {
+      opacity: 0.75;
+    }
     #objectiveText {
       margin-top: 4px;
       font-weight: 600;
       color: #ffd27f;
     }
-    #steps { list-style: none; padding: 0; margin: 4px 0 2px 0; }
-    #steps li { margin: 1px 0; font-size: 12px; }
+    #steps {
+      list-style: none;
+      padding: 0;
+      margin: 4px 0 2px 0;
+    }
+    #steps li {
+      margin: 1px 0;
+      font-size: 12px;
+    }
     .pending::before { content: "○ "; color: #999; }
     .active::before  { content: "● "; color: #ffd27f; }
     .done::before    { content: "✔ "; color: #4caf50; }
@@ -48,8 +76,14 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       cursor: pointer;
     }
-    #gaugesPanel h3 { margin: 0 0 3px 0; font-size: 13px; }
-    #gaugesPanel p  { margin: 1px 0; font-size: 12px; }
+    #gaugesPanel h3 {
+      margin: 0 0 3px 0;
+      font-size: 13px;
+    }
+    #gaugesPanel p {
+      margin: 1px 0;
+      font-size: 12px;
+    }
 
     #statusBar {
       margin-top: 5px;
@@ -81,8 +115,14 @@
       box-shadow: 0 0 28px rgba(0,0,0,0.7);
       max-width: 90vw;
     }
-    #completeOverlay h2 { margin: 0 0 6px 0; font-size: 18px; }
-    #completeOverlay p  { margin: 4px 0; font-size: 13px; }
+    #completeOverlay h2 {
+      margin: 0 0 6px 0;
+      font-size: 18px;
+    }
+    #completeOverlay p {
+      margin: 4px 0;
+      font-size: 13px;
+    }
     #completeOverlay button {
       margin-top: 10px;
       padding: 6px 15px;
@@ -94,18 +134,29 @@
       font-weight: 600;
       font-size: 13px;
     }
-    #completeOverlay button:hover { background: #3f9144; }
+    #completeOverlay button:hover {
+      background: #3f9144;
+    }
 
     @media (max-width: 600px) {
-      #hud { left: 10px; width: auto; }
-      #hud h1 { font-size: 14px; }
+      #hud {
+        left: 10px;
+        width: auto;
+      }
+      #hud h1 {
+        font-size: 14px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="hud">
     <h1>🛢️ KOC X-Tree Training — 3D واقعي</h1>
-    <p><small>محاكاة واقعية لشجرة البئر والـ Hook-Up لتدريب الفيلد أوبريتر على WHP / FLP / Choke / Drain Sample.</small></p>
+    <p>
+      <small>
+        محاكاة واقعية لشجرة البئر والـ Hook-Up لتدريب الفيلد أوبريتر على WHP / FLP / Choke / Drain Sample.
+      </small>
+    </p>
     <p id="objectiveText"></p>
     <ul id="steps">
       <li id="step1" class="active">1- قراءة WHP &amp; FLP من شاشة القياسات</li>
@@ -129,7 +180,10 @@
   <div id="completeOverlay">
     <div class="box">
       <h2>✅ التدريب اكتمل بنجاح</h2>
-      <p>نفذت كل خطوات الفيلد أوبريتر على الـ X-Tree والـ Hook-Up: تشخيص انسداد الـ Choke وأخذ Drain Sample بأمان.</p>
+      <p>
+        نفذت كل خطوات الفيلد أوبريتر على الـ X-Tree والـ Hook-Up:
+        تشخيص انسداد الـ Choke وأخذ Drain Sample بأمان.
+      </p>
       <button onclick="restartTraining()">إعادة التجربة</button>
     </div>
   </div>
@@ -282,6 +336,10 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio * 0.8, 1.6));
       document.body.appendChild(renderer.domElement);
+      // تأكيد أن الكانفس فل سكرين
+      renderer.domElement.style.position = "fixed";
+      renderer.domElement.style.inset = "0";
+      renderer.domElement.style.zIndex = "0";
 
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.target.set(0, 3.2, 0);
@@ -290,15 +348,15 @@
       controls.minDistance = 7;
       controls.maxDistance = 35;
       controls.maxPolarAngle = Math.PI / 2.1;
+      controls.update();
 
-      // إضاءة واقعية
+      // إضاءة
       const hemiLight = new THREE.HemisphereLight(0xffffee, 0xb89b6a, 0.7);
       hemiLight.position.set(0, 40, 0);
       scene.add(hemiLight);
 
       const sun = new THREE.DirectionalLight(0xffffff, 1.0);
       sun.position.set(25, 35, 10);
-      sun.castShadow = false;
       scene.add(sun);
 
       // أرضية صحراوية
@@ -313,7 +371,7 @@
       ground.position.y = 0;
       scene.add(ground);
 
-      // تلال صغيرة
+      // تلال بسيطة
       for (let i = 0; i < 18; i++) {
         const hillGeo = new THREE.ConeGeometry(
           0.8 + Math.random() * 1.8,
@@ -334,7 +392,7 @@
         scene.add(hill);
       }
 
-      // منصة خرسانية صغيرة تحت الشجرة
+      // منصة خرسانية
       const padGeo = new THREE.BoxGeometry(10, 0.4, 10);
       const padMat = new THREE.MeshStandardMaterial({
         color: 0x9c9c9c,
@@ -345,7 +403,7 @@
       pad.position.set(0, 0.2, 0);
       scene.add(pad);
 
-      // قاعدة الشجرة المعدنية
+      // قاعدة الشجرة
       const baseGeo = new THREE.CylinderGeometry(1.2, 1.4, 0.6, 14);
       const baseMat = new THREE.MeshStandardMaterial({
         color: 0x5b6067,
@@ -356,7 +414,7 @@
       base.position.set(0, 0.7, 0);
       scene.add(base);
 
-      // أنبوب رأسي للشجرة
+      // أنبوب رأسي
       const vertGeo = new THREE.CylinderGeometry(0.3, 0.3, 4.5, 14);
       const vertMat = new THREE.MeshStandardMaterial({
         color: 0xb3b3b3,
@@ -374,47 +432,36 @@
         roughness: 0.8
       });
 
-      // دالة لصنع handwheel مع صمام
-      function createRustValve(y, sideOffset, interactiveType) {
+      // handwheel صدئة + valve
+      function createRustValve(y, sideOffset) {
         const group = new THREE.Group();
 
-        // جسم الصمام
         const valveBodyGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.4, 14);
         const valveBody = new THREE.Mesh(valveBodyGeo, rustMat);
         valveBody.position.set(sideOffset, y, 0);
         valveBody.rotation.z = Math.PI / 2;
         group.add(valveBody);
 
-        // handwheel
         const wheelGeo = new THREE.TorusGeometry(0.7, 0.08, 10, 22);
         const wheel = new THREE.Mesh(wheelGeo, rustMat);
         wheel.position.set(sideOffset, y, 0);
         wheel.rotation.x = Math.PI / 2;
         group.add(wheel);
 
-        // stem
         const stemGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.6, 10);
         const stem = new THREE.Mesh(stemGeo, rustMat);
         stem.position.set(sideOffset, y + 0.5, 0);
         group.add(stem);
 
         scene.add(group);
-
-        if (interactiveType) {
-          // نخلي الـ wheel هو التفاعلي
-          wheel.userData.type = interactiveType;
-          interactiveObjects.push(wheel);
-          return wheel;
-        }
-        return group;
       }
 
-      // handwheels رأسية (مثل الصورة الأولى)
-      createRustValve(4.0, 0, null); // upper
-      createRustValve(3.0, 0, null); // middle
-      createRustValve(2.0, 0, null); // lower
+      // الصمامات الرأسية مثل الصورة الأولى
+      createRustValve(4.0, 0); // upper
+      createRustValve(3.0, 0); // middle
+      createRustValve(2.0, 0); // lower
 
-      // أذرع جانبية رئيسية (cross)
+      // أذرع جانبية
       const armGeo = new THREE.CylinderGeometry(0.22, 0.22, 3.2, 14);
       const armMat = new THREE.MeshStandardMaterial({
         color: 0xb3b3b3,
@@ -432,13 +479,13 @@
       rightArm.position.set(1.7, 3.0, 0);
       scene.add(rightArm);
 
-      // صمام جانبي يسار (Rusty غير تفاعلي)
-      createRustValve(3.0, -3.0, null);
+      // صمام جانبي يسار (غير تفاعلي)
+      createRustValve(3.0, -3.0);
 
-      // صمام جانبي يمين (Upstream تفاعلي لكن لونه أزرق/ستيل مثل الصورة الثانية)
+      // Upstream valve يمين (تفاعلي)
       const upValveBodyGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.5, 16);
       const upValveMat = new THREE.MeshStandardMaterial({
-        color: 0x00b894, // أخضر مفتوح
+        color: 0x00b894, // أخضر = مفتوح
         metalness: 0.6,
         roughness: 0.35
       });
@@ -458,26 +505,24 @@
       const upWheel = new THREE.Mesh(upWheelGeo, upWheelMat);
       upWheel.position.set(3.0, 3.0, 0);
       upWheel.rotation.x = Math.PI / 2;
-      // نخلي الـ wheel أيضاً تفاعلي كنسخة ثانية
       upWheel.userData.type = "upstream";
       interactiveObjects.push(upWheel);
       scene.add(upWheel);
 
-      // Hook-Up / Flowline assembly (شبيه بالصورة الثانية)
+      // Hook-Up / Flowline assembly
 
-      // أنبوب خارج من يمين الشجرة إلى manifold أزرق
-      const line1Geo = new THREE.CylinderGeometry(0.18, 0.18, 3.2, 14);
       const lineSteelMat = new THREE.MeshStandardMaterial({
         color: 0xd0d8e0,
         metalness: 0.7,
         roughness: 0.25
       });
+
+      const line1Geo = new THREE.CylinderGeometry(0.18, 0.18, 3.2, 14);
       const line1 = new THREE.Mesh(line1Geo, lineSteelMat);
       line1.rotation.z = Math.PI / 2;
       line1.position.set(4.4, 3.0, 0);
       scene.add(line1);
 
-      // manifold / choke block أزرق مثل KOC
       const chokeBlockGeo = new THREE.BoxGeometry(1.5, 0.9, 0.9);
       const chokeBlockMat = new THREE.MeshStandardMaterial({
         color: 0x124d92,
@@ -490,7 +535,6 @@
       interactiveObjects.push(chokeBlock);
       scene.add(chokeBlock);
 
-      // handwheel على choke
       const chokeWheel = new THREE.Mesh(
         new THREE.TorusGeometry(0.6, 0.08, 10, 22),
         new THREE.MeshStandardMaterial({
@@ -505,7 +549,6 @@
       interactiveObjects.push(chokeWheel);
       scene.add(chokeWheel);
 
-      // خط بعد الـ choke نازل للأرض (Hook-Up)
       const downGeo = new THREE.CylinderGeometry(0.16, 0.16, 2.6, 12);
       const downPipe = new THREE.Mesh(downGeo, lineSteelMat);
       downPipe.position.set(7.2, 2.0, 0);
@@ -523,7 +566,6 @@
       hookLine.position.set(9.4, 0.7, -1.0);
       scene.add(hookLine);
 
-      // صمام Drain Sample على الخط
       const drainValveGeo = new THREE.SphereGeometry(0.28, 18, 18);
       const drainValveMat = new THREE.MeshStandardMaterial({
         color: 0x87cefa,
@@ -536,7 +578,7 @@
       interactiveObjects.push(drainValve);
       scene.add(drainValve);
 
-      // Gauge panel 3D
+      // لوحة القياسات 3D
       const gaugePanelGeo = new THREE.BoxGeometry(2.0, 1.2, 0.16);
       const gaugePanelMat = new THREE.MeshStandardMaterial({
         color: 0x111a26,
@@ -549,7 +591,6 @@
       interactiveObjects.push(gaugePanel3D);
       scene.add(gaugePanel3D);
 
-      // legs
       const legGeo = new THREE.CylinderGeometry(0.09, 0.09, 2.0, 10);
       const legMat = new THREE.MeshStandardMaterial({
         color: 0x444444,
@@ -562,7 +603,7 @@
       leg2.position.set(-5.6, 2.0, 3.5);
       scene.add(leg2);
 
-      // إعداد Raycaster + Pointer
+      // raycaster + pointer
       raycaster = new THREE.Raycaster();
       pointer = new THREE.Vector2();
 
@@ -584,7 +625,6 @@
 
       raycaster.setFromCamera(pointer, camera);
       const intersects = raycaster.intersectObjects(interactiveObjects, true);
-
       if (intersects.length === 0) return;
 
       let obj = intersects[0].object;
@@ -659,7 +699,6 @@
           sampleTaken = true;
           obj.material.color.set(0x00bcd4);
 
-          // زجاجة عينة بسيطة تحت الصمام
           const bottleGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.7, 12);
           const bottleMat = new THREE.MeshStandardMaterial({
             color: 0xffffff,
