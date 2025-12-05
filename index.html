@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>KOC X-Tree Training (EN / AR)</title>
+<title>KOC Wellhead Training – X-Tree & Drain Sample (EN/AR)</title>
 <style>
   body {
     margin: 0;
@@ -11,17 +11,19 @@
     font-family: Arial, sans-serif;
     color: #eee;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
   }
 
   .container {
     display: flex;
+    flex-wrap: wrap;
     gap: 20px;
     margin-top: 20px;
     max-width: 1200px;
     width: 100%;
-    padding: 0 10px;
+    padding: 0 10px 20px 10px;
+    box-sizing: border-box;
   }
 
   .tree-panel, .hud-panel, .objectives-panel {
@@ -37,14 +39,17 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    min-width: 320px;
   }
 
   .hud-panel {
     flex: 0.9;
+    min-width: 260px;
   }
 
   .objectives-panel {
     flex: 1.1;
+    min-width: 260px;
   }
 
   h2 {
@@ -53,13 +58,14 @@
     text-align: center;
   }
 
-  .valve, .bean {
+  .valve, .bean, .drain-valve, .button-like {
     display: inline-block;
     padding: 6px 10px;
     font-size: 11px;
     margin: 4px;
     cursor: pointer;
     transition: 0.2s;
+    user-select: none;
   }
 
   .valve {
@@ -114,12 +120,67 @@
     display: flex;
     justify-content: space-between;
     margin-top: 12px;
+    gap: 8px;
   }
 
   .side-block {
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .hookup-row {
+    margin-top: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+  }
+
+  .hookup-line {
+    height: 4px;
+    width: 160px;
+    background: #999;
+  }
+
+  .drain-line {
+    width: 4px;
+    height: 40px;
+    background: #888;
+    margin: 0 auto;
+  }
+
+  .drain-valve {
+    border-radius: 50px;
+    border: 2px solid #cccccc;
+    background: #333333;
+  }
+
+  .drain-valve.open {
+    box-shadow: 0 0 8px #00c8ff;
+    border-color: #00e0ff;
+  }
+
+  .sample-bottle {
+    display: inline-block;
+    width: 26px;
+    height: 40px;
+    border-radius: 6px 6px 4px 4px;
+    border: 2px solid #888;
+    background: linear-gradient(to top, #444 0%, #1b1b1b 50%, #101010 100%);
+    position: relative;
+  }
+
+  .sample-bottle.filled::after {
+    content: "";
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    height: 60%;
+    background: #90501f;
+    border-radius: 3px;
   }
 
   .gauge {
@@ -141,12 +202,12 @@
   .status.removed  { background: #33241a; border: 1px solid #ffb347; }
   .status.shutin   { background: #2c1a1a; border: 1px solid #ff4444; }
 
-  .lang-switch {
+  .lang-switch, .stage-indicator {
     text-align: center;
     margin-bottom: 10px;
   }
 
-  .lang-switch button {
+  .lang-switch button, .control-button {
     margin: 0 3px;
     padding: 4px 10px;
     font-size: 12px;
@@ -162,6 +223,11 @@
     font-weight: bold;
   }
 
+  .control-button {
+    margin-top: 6px;
+    width: 90%;
+  }
+
   .tips {
     font-size: 11px;
     opacity: 0.8;
@@ -174,13 +240,12 @@
     font-size: 13px;
   }
 
-  /* لدعم انعكاس النص العربي عند اختيار AR */
   .rtl {
     direction: rtl;
     text-align: right;
   }
 
-  /* منطقة شخصية العامل */
+  /* شخصية العامل */
   .operator-panel {
     margin-top: 15px;
     display: flex;
@@ -195,7 +260,6 @@
     position: relative;
   }
 
-  /* رسم عامل بسيط بـ CSS (بدون صور خارجية) */
   .operator-body {
     position: absolute;
     bottom: 0;
@@ -203,7 +267,7 @@
     transform: translateX(-50%);
     width: 40px;
     height: 80px;
-    background: #1f3f70;  /* coverall أزرق */
+    background: #1f3f70;
     border-radius: 6px;
   }
 
@@ -214,7 +278,7 @@
     transform: translateX(-50%);
     width: 32px;
     height: 32px;
-    background: #f0d2a4;  /* لون الوجه */
+    background: #f0d2a4;
     border-radius: 50%;
     border: 2px solid #e0c090;
   }
@@ -226,7 +290,7 @@
     transform: translateX(-50%);
     width: 40px;
     height: 20px;
-    background: #e4c200;  /* خوذة صفراء */
+    background: #e4c200;
     border-radius: 50% 50% 20% 20%;
     border: 2px solid #c5a800;
   }
@@ -283,7 +347,7 @@
   }
 
   .operator-dialog {
-    max-width: 260px;
+    max-width: 280px;
     font-size: 11px;
     background: #222;
     border-radius: 8px;
@@ -313,16 +377,46 @@
     border-color: transparent transparent transparent #555;
   }
 
+  .log-panel {
+    max-width: 1200px;
+    width: 100%;
+    padding: 8px 14px 14px 14px;
+    box-sizing: border-box;
+    font-size: 11px;
+    color: #bbb;
+  }
+
+  .log-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  .log-messages {
+    max-height: 80px;
+    overflow-y: auto;
+    border-top: 1px solid #333;
+    padding-top: 4px;
+  }
+
+  .log-entry {
+    margin-bottom: 2px;
+  }
+
+  @media (max-width: 720px) {
+    .tree-panel, .hud-panel, .objectives-panel {
+      flex: 1 1 100%;
+    }
+  }
 </style>
 </head>
 <body>
 
 <div class="container">
 
-  <!-- اللوحة الرئيسية: X-Tree + العامل -->
+  <!-- اللوحة الرئيسية: X-Tree + hook-up + العامل -->
   <div class="tree-panel">
     <div>
-      <h2 id="title-tree">KOC X-Tree (Training Layout)</h2>
+      <h2 id="title-tree">KOC X-Tree Training</h2>
 
       <div class="center-stack">
         <div class="valve closed" id="upper-master">UPPER MASTER</div>
@@ -350,8 +444,21 @@
         </div>
       </div>
 
+      <!-- hook-up + drain sample line -->
+      <div class="hookup-row">
+        <span id="hookup-label">HOOK-UP LINE</span>
+        <div class="hookup-line"></div>
+        <div>
+          <div class="drain-line"></div>
+          <div class="drain-valve" id="drain-valve">DRAIN SAMPLE</div>
+        </div>
+        <div id="bottle-area">
+          <div class="sample-bottle" id="sample-bottle"></div>
+        </div>
+      </div>
+
       <div class="tips" id="click-tip">
-        Click UPSTREAM RIGHT or ADJ BEAN to interact.
+        Click UPSTREAM RIGHT, ADJ BEAN or DRAIN SAMPLE to interact.
       </div>
     </div>
 
@@ -368,7 +475,7 @@
         <div class="operator-arm-right"></div>
       </div>
       <div class="operator-dialog" id="operator-dialog">
-        I am the field operator. Follow the steps on the right to handle the choke safely.
+        I am the field operator. Press "Start Training" to begin the simulation.
       </div>
     </div>
   </div>
@@ -380,17 +487,23 @@
       <button id="btn-ar">ع</button>
     </div>
 
+    <div class="stage-indicator" id="stage-indicator">
+      Stage 1 / 3 – Diagnose choke blockage
+    </div>
+
+    <button class="control-button" id="btn-start">Start Training / إعادة بدء التدريب</button>
+
     <h2 id="hud-title">Pressures & Status</h2>
 
-    <div class="gauge" id="whp-label">WHP: 300 psi</div>
-    <div class="gauge" id="flp-label">FLP: 150 psi</div>
+    <div class="gauge" id="whp-label">WHP: 380 psi</div>
+    <div class="gauge" id="flp-label">FLP: 80 psi</div>
 
-    <div class="status flowing" id="status-label">
-      Flowing – normal operation.
+    <div class="status blocked" id="status-label">
+      Suspected choke blockage.
     </div>
 
     <div class="tips" id="status-tip">
-      Open UPSTREAM RIGHT with choke installed → normal flow. Closed upstream or removed choke will change WHP & FLP.
+      High WHP with low FLP can indicate choke blockage. Close UPSTREAM RIGHT then remove the choke from ADJ BEAN.
     </div>
   </div>
 
@@ -398,24 +511,29 @@
   <div class="objectives-panel" id="objectives-panel">
     <h2 id="objectives-title">Training Objectives</h2>
     <ul id="objectives-list">
-      <li>Check WHP &amp; FLP readings.</li>
-      <li>Close UPSTREAM RIGHT before removing the choke.</li>
-      <li>Click on ADJ BEAN to remove the choke.</li>
-      <li>Inspect the choke for blockage.</li>
-      <li>Re-install the choke and open UPSTREAM RIGHT.</li>
-      <li>Confirm WHP &amp; FLP are back to normal.</li>
+      <!-- يتم تعبئتها من الجافاسكربت حسب المرحلة واللغة -->
     </ul>
   </div>
 
 </div>
 
+<div class="log-panel">
+  <div class="log-title" id="log-title">Event log</div>
+  <div class="log-messages" id="log-messages"></div>
+</div>
+
 <script>
-  // حالة البئر
-  let state = {
+  // حالة اللعبة
+  const state = {
     lang: 'en',
+    stage: 1,                 // 1: blockage / choke, 2: drain sample, 3: finished
     upstreamRightOpen: true,
-    chokeRemoved: false,
-    chokeBlocked: true   // نفترض في البداية فيه انسداد جزئي
+    chokeInstalled: true,
+    chokeBlocked: true,
+    drainValveOpen: false,
+    drainFlushed: false,
+    bottlePlaced: false,
+    sampleCollected: false
   };
 
   // عناصر DOM
@@ -430,104 +548,263 @@
   const objectivesPanel = document.getElementById('objectives-panel');
   const clickTip        = document.getElementById('click-tip');
   const operatorDialog  = document.getElementById('operator-dialog');
+  const stageIndicator  = document.getElementById('stage-indicator');
+  const logMessages     = document.getElementById('log-messages');
+  const logTitle        = document.getElementById('log-title');
 
   const upstreamRight = document.getElementById('upstream-right');
   const adjBean       = document.getElementById('adj-bean');
-
-  const btnEN = document.getElementById('btn-en');
-  const btnAR = document.getElementById('btn-ar');
+  const drainValve    = document.getElementById('drain-valve');
+  const sampleBottle  = document.getElementById('sample-bottle');
+  const btnEN         = document.getElementById('btn-en');
+  const btnAR         = document.getElementById('btn-ar');
+  const btnStart      = document.getElementById('btn-start');
+  const hookupLabel   = document.getElementById('hookup-label');
 
   // نصوص باللغتين
   const texts = {
     en: {
-      titleTree: "KOC X-Tree (Training Layout)",
+      titleTree: "KOC X-Tree Training",
       hudTitle: "Pressures & Status",
-      clickTip: "Click UPSTREAM RIGHT or ADJ BEAN to interact.",
+      logTitle: "Event log",
+      hookup: "HOOK-UP LINE (Test / Flow line)",
+      clickTip: "Click UPSTREAM RIGHT, ADJ BEAN or DRAIN SAMPLE to interact.",
       whp: (v) => `WHP: ${v} psi`,
       flp: (v) => `FLP: ${v} psi`,
+      stages: {
+        1: "Stage 1 / 3 – Diagnose choke blockage",
+        2: "Stage 2 / 3 – Take drain sample from hook-up",
+        3: "Stage 3 / 3 – Training complete"
+      },
       status: {
         normal: "Normal well state.",
         flowing: "Flowing – normal operation.",
         suspected_blockage: "Suspected choke blockage.",
         choke_removed: "Choke removed – line isolated.",
-        shut_in: "Well shut-in."
+        shut_in: "Well shut-in.",
+        sampling: "Drain sampling in progress."
       },
       statusTip_normal:
         "Open UPSTREAM RIGHT with a clean choke installed → WHP & FLP show normal flow.",
       statusTip_blocked:
-        "High WHP with low FLP can indicate choke blockage. Remove and inspect the choke.",
+        "High WHP with low FLP can indicate choke blockage. Close UPSTREAM RIGHT then remove the choke.",
       statusTip_removed:
-        "With the upstream valve closed and choke removed, WHP and FLP should read zero.",
+        "With the upstream valve closed and the choke removed, WHP and FLP should read zero.",
       statusTip_shutin:
         "When upstream valve is closed and choke installed, WHP increases and FLP goes to zero.",
+      statusTip_sampling:
+        "Flush the drain line first, then place the bottle and collect the sample. Always close the drain valve afterwards.",
       objectivesTitle: "Training Objectives",
-      objectivesHTML: `
-        <li>Check WHP &amp; FLP readings.</li>
-        <li>Close UPSTREAM RIGHT before removing the choke.</li>
-        <li>Click on ADJ BEAN to remove the choke.</li>
-        <li>Inspect the choke for blockage.</li>
-        <li>Re-install the choke and open UPSTREAM RIGHT.</li>
-        <li>Confirm WHP &amp; FLP are back to normal.</li>
-      `,
+      objectives: {
+        1: `
+          <li>Read WHP &amp; FLP – note that WHP is high and FLP is low (suspected blockage).</li>
+          <li>Close UPSTREAM RIGHT before touching the choke.</li>
+          <li>Click ADJ BEAN once to remove the choke for inspection.</li>
+          <li>Click ADJ BEAN again to install a clean choke.</li>
+          <li>Open UPSTREAM RIGHT and confirm WHP &amp; FLP return to normal.</li>
+        `,
+        2: `
+          <li>Keep the well flowing with a clean choke installed.</li>
+          <li>Click DRAIN SAMPLE once to flush the hook-up line.</li>
+          <li>Click the sample bottle to place it under the outlet.</li>
+          <li>Click DRAIN SAMPLE again to collect the sample into the bottle.</li>
+          <li>Make sure the drain valve is closed after sampling.</li>
+        `,
+        3: `
+          <li>You have completed the training scenario.</li>
+          <li>Review the sequence: diagnose blockage → clean/replace choke → take drain sample safely.</li>
+        `
+      },
       operatorDialogs: {
-        flowing: "I see normal WHP and FLP. The well is flowing properly with a clean choke.",
-        suspected_blockage: "WHP is high and FLP is low. I suspect choke blockage, we should close upstream and pull the choke.",
-        choke_removed: "Upstream is closed and the choke is removed. WHP and FLP are zero, it is safe to inspect the choke.",
-        shut_in: "Upstream is closed with the choke installed. WHP is building up while FLP is zero – classic shut-in condition.",
-        normal: "Follow the training steps to learn how to handle the choke and monitor pressures."
+        intro: "I am the field operator. Press \"Start Training\" to begin the simulation.",
+        stage1_start: "Stage 1: WHP is high and FLP is low – I suspect choke blockage. Close UPSTREAM and pull the choke.",
+        stage1_wrong_safety: "I never pull the choke while UPSTREAM is open. Close the valve first.",
+        stage1_removed: "The choke is out. Inspect it for sand or scale, then install a clean one.",
+        stage1_cleaned: "Clean choke installed. Open UPSTREAM and check that WHP and FLP are back to normal.",
+        stage1_done: "Good. Pressures are normal again. Now we'll take a drain sample from the hook-up.",
+        stage2_start: "Stage 2: We take a drain sample. First flush the drain line, then place the bottle and collect the sample.",
+        stage2_flush: "Drain line flushing… a short controlled flow to clear old fluid from the hook-up.",
+        stage2_place_bottle: "Bottle in place. Open the drain again to fill it – not too long, just enough volume for the lab.",
+        stage2_sample_ok: "Sample collected. Close the drain valve to avoid any spill.",
+        stage2_need_close: "Close the drain valve. We never leave a drain open.",
+        stage2_done: "Drain sample taken correctly. Pressures stayed stable – good job.",
+        finished: "Training complete. You handled the choke and drain sampling safely – well done.",
+        generic: "Follow the objectives on the right and interact with the valves and choke on the left."
+      },
+      startButton: "Start Training / Reset",
+      placedBottle: "Sample bottle placed.",
+      log: {
+        upstream_open: "UPSTREAM RIGHT opened.",
+        upstream_closed: "UPSTREAM RIGHT closed.",
+        choke_removed: "Choke removed from ADJ BEAN.",
+        choke_installed_dirty: "Choke installed but still blocked.",
+        choke_installed_clean: "Clean choke installed.",
+        drain_open_flush: "Drain valve opened – flushing line.",
+        drain_open_fill: "Drain valve opened – filling sample bottle.",
+        drain_closed: "Drain valve closed.",
+        bottle_placed: "Bottle placed under drain outlet.",
+        sample_collected: "Sample collected into bottle.",
+        stage1_done: "Stage 1 complete – blockage cleared.",
+        stage2_done: "Stage 2 complete – drain sample taken.",
+        reset: "Training reset."
       }
     },
     ar: {
-      titleTree: "شجرة البئر (X-Tree) للتدريب",
+      titleTree: "تدريب شجرة البئر (X-Tree)",
       hudTitle: "الضغوط وحالة البئر",
-      clickTip: "اضغط على UPSTREAM RIGHT أو ADJ BEAN للتفاعل.",
+      logTitle: "سجل الأحداث",
+      hookup: "خط الـ HOOK-UP (خط الاختبار / الجريان)",
+      clickTip: "اضغط على UPSTREAM RIGHT أو ADJ BEAN أو DRAIN SAMPLE للتفاعل.",
       whp: (v) => `ضغط رأس البئر WHP: ${v} psi`,
       flp: (v) => `ضغط خط الجريان FLP: ${v} psi`,
+      stages: {
+        1: "المرحلة 1 / 3 – تشخيص انسداد الجوك",
+        2: "المرحلة 2 / 3 – أخذ Drain Sample من الـ hook-up",
+        3: "المرحلة 3 / 3 – إنهاء التدريب"
+      },
       status: {
         normal: "حالة البئر طبيعية.",
         flowing: "البئر ينتج بشكل طبيعي.",
         suspected_blockage: "يُشتبه بوجود انسداد في الجوك (choke).",
         choke_removed: "تم نزع الجوك – الخط معزول.",
-        shut_in: "البئر مغلق (Shut-in)."
+        shut_in: "البئر مغلق (Shut-in).",
+        sampling: "جاري أخذ عينة Drain Sample."
       },
       statusTip_normal:
         "فتح UPSTREAM RIGHT مع وجود جوك نظيف مركّب → WHP و FLP يظهران تدفقاً طبيعياً.",
       statusTip_blocked:
-        "ارتفاع WHP مع انخفاض FLP قد يدل على انسداد في الجوك. يجب نزع الجوك وفحصه.",
+        "ارتفاع WHP مع انخفاض FLP قد يدل على انسداد في الجوك. يجب إغلاق UPSTREAM ثم نزع الجوك.",
       statusTip_removed:
-        "عند إغلاق فالف UPSTREAM ونزع الجوك، يجب أن تكون قراءات WHP و FLP صفر تقريباً.",
+        "عند إغلاق الـ UPSTREAM ونزع الجوك، يجب أن تكون قراءات WHP و FLP قريبة من الصفر.",
       statusTip_shutin:
         "عند إغلاق UPSTREAM مع وجود الجوك في مكانه، يرتفع WHP وينعدم FLP.",
+      statusTip_sampling:
+        "قم بتفريغ الخط أولاً (flushing)، ثم ضع القنينة واجمع العينة، وبعدها أغلق فالف الـ Drain.",
       objectivesTitle: "أهداف التدريب",
-      objectivesHTML: `
-        <li>التأكد من قراءات WHP و FLP.</li>
-        <li>إغلاق فالف UPSTREAM RIGHT قبل نزع الجوك.</li>
-        <li>الضغط على ADJ BEAN لنزع الجوك.</li>
-        <li>فحص الجوك والتأكد من وجود انسداد أو لا.</li>
-        <li>إعادة تركيب الجوك وفتح UPSTREAM RIGHT.</li>
-        <li>التأكد من عودة قراءات WHP و FLP للوضع الطبيعي.</li>
-      `,
+      objectives: {
+        1: `
+          <li>قراءة WHP و FLP – لاحظ أن WHP مرتفع و FLP منخفض (اشتباه انسداد).</li>
+          <li>إغلاق فالف UPSTREAM RIGHT قبل لمس الجوك.</li>
+          <li>الضغط على ADJ BEAN مرة واحدة لنزع الجوك وفحصه.</li>
+          <li>الضغط على ADJ BEAN مرة ثانية لتركيب جوك نظيف.</li>
+          <li>فتح UPSTREAM RIGHT والتأكد من رجوع WHP و FLP للوضع الطبيعي.</li>
+        `,
+        2: `
+          <li>إبقاء البئر في وضع إنتاج مع جوك نظيف مركّب.</li>
+          <li>الضغط على DRAIN SAMPLE مرة واحدة لتفريغ خط الـ hook-up.</li>
+          <li>الضغط على قنينة العينة لوضعها تحت مخرج الـ Drain.</li>
+          <li>الضغط على DRAIN SAMPLE مرة أخرى لملء القنينة بالعينة.</li>
+          <li>التأكد من إغلاق فالف الـ Drain بعد أخذ العينة.</li>
+        `,
+        3: `
+          <li>تم إنهاء سيناريو التدريب بنجاح.</li>
+          <li>راجع التسلسل: تشخيص الانسداد → تنظيف/تبديل الجوك → أخذ Drain Sample بطريقة آمنة.</li>
+        `
+      },
       operatorDialogs: {
-        flowing: "أشوف WHP و FLP طبيعيين، البئر ينتج بشكل سليم والجوك نظيف.",
-        suspected_blockage: "WHP مرتفع و FLP منخفض، غالباً فيه انسداد في الجوك. لازم نسكر الـ UPSTREAM ونطلع الجوك.",
-        choke_removed: "الـ UPSTREAM مسكّر والجوك منزوعة، WHP و FLP على الصفر، الوضع آمن لفحص الجوك.",
-        shut_in: "الـ UPSTREAM مسكّر والجوك في مكانها، WHP يرتفع و FLP صفر – حالة Shut-in.",
-        normal: "اتبع خطوات التدريب عشان تتعلم كيف تتعامل مع الجوك ومراقبة الضغوط بشكل صحيح."
+        intro: "أنا الفيلد أوبريتر. اضغط \"Start Training\" لبدء المحاكاة.",
+        stage1_start: "المرحلة 1: WHP عالي و FLP منخفض – أغلب الظن فيه انسداد في الجوك. نسكّر الـ UPSTREAM ونطلع الجوك.",
+        stage1_wrong_safety: "ما أطلع الجوك والـ UPSTREAM مفتوح أبدًا. أول خطوة نسكر الفالف.",
+        stage1_removed: "الجوك طالع. نفحصه إذا فيه رمل أو scale، وبعدين نركب جوك نظيف.",
+        stage1_cleaned: "ركبنا جوك نظيف. افتح الـ UPSTREAM وتأكد أن WHP و FLP رجعوا طبيعيين.",
+        stage1_done: "تمام، الضغط صار طبيعي. الحين ننتقل لأخذ Drain Sample من الـ hook-up.",
+        stage2_start: "المرحلة 2: نأخذ Drain Sample. أول شي نفرغ الخط، بعدين نحط القنينة ونجمع العينة.",
+        stage2_flush: "جاري تفريغ خط الـ Drain… فلو بسيط ومتحكم فيه عشان نشيل السائل القديم من الـ hook-up.",
+        stage2_place_bottle: "القنينة في مكانها. افتح الـ Drain مرة ثانية عشان تمتلئ – مو وقت طويل، بس حجم كافي للمختبر.",
+        stage2_sample_ok: "العينة جاهزة. لا تنسى تقفل فالف الـ Drain عشان ما يصير أي spill.",
+        stage2_need_close: "سكّر فالف الـ Drain. ما نترك أي فالف Drain مفتوح.",
+        stage2_done: "تم أخذ الـ Drain Sample بشكل صحيح والضغوط ثابتة – شغل نظيف.",
+        finished: "انتهى التدريب. تعاملت مع الجوك والـ Drain Sampling بطريقة آمنة – عمل ممتاز.",
+        generic: "اتبع الأهداف الموجودة على اليمين وتفاعل مع الفالفات والجوك على اليسار."
+      },
+      startButton: "Start Training / إعادة بدء التدريب",
+      placedBottle: "تم وضع قنينة العينة.",
+      log: {
+        upstream_open: "تم فتح UPSTREAM RIGHT.",
+        upstream_closed: "تم إغلاق UPSTREAM RIGHT.",
+        choke_removed: "تم نزع الجوك من ADJ BEAN.",
+        choke_installed_dirty: "تم تركيب جوك لكنه ما زال مسدود.",
+        choke_installed_clean: "تم تركيب جوك نظيف.",
+        drain_open_flush: "تم فتح فالف الـ Drain لتفريغ الخط.",
+        drain_open_fill: "تم فتح فالف الـ Drain لملء قنينة العينة.",
+        drain_closed: "تم إغلاق فالف الـ Drain.",
+        bottle_placed: "تم وضع القنينة تحت مخرج الـ Drain.",
+        sample_collected: "تم جمع العينة في القنينة.",
+        stage1_done: "انتهت المرحلة 1 – تم إزالة الانسداد.",
+        stage2_done: "انتهت المرحلة 2 – تم أخذ Drain Sample.",
+        reset: "تم إعادة تشغيل سيناريو التدريب."
       }
     }
   };
 
-  function updateUI() {
+  function addLog(key) {
+    const t = texts[state.lang].log[key];
+    if (!t) return;
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    const time = new Date().toLocaleTimeString();
+    div.textContent = `[${time}] ${t}`;
+    logMessages.prepend(div);
+  }
+
+  function resetState() {
+    state.stage = 1;
+    state.upstreamRightOpen = true;
+    state.chokeInstalled = true;
+    state.chokeBlocked = true;
+    state.drainValveOpen = false;
+    state.drainFlushed = false;
+    state.bottlePlaced = false;
+    state.sampleCollected = false;
+
+    sampleBottle.classList.remove('filled');
+    drainValve.classList.remove('open');
+    updateUI(true);
+    addLog('reset');
+  }
+
+  function calcPressures() {
+    let whp, flp, statusKey;
+
+    if (!state.chokeInstalled) {
+      whp = 0;
+      flp = 0;
+      statusKey = 'choke_removed';
+    } else if (!state.upstreamRightOpen) {
+      whp = 350;
+      flp = 0;
+      statusKey = 'shut_in';
+    } else {
+      if (state.chokeBlocked) {
+        whp = 380;
+        flp = 80;
+        statusKey = 'suspected_blockage';
+      } else {
+        whp = 300;
+        flp = 150;
+        statusKey = state.stage === 2 && (state.drainValveOpen || state.sampleCollected)
+          ? 'sampling'
+          : 'flowing';
+      }
+    }
+
+    return { whp, flp, statusKey };
+  }
+
+  function updateUI(skipDialog) {
     const lang = state.lang;
     const t = texts[lang];
 
     titleTree.textContent = t.titleTree;
     hudTitle.textContent = t.hudTitle;
+    logTitle.textContent = t.logTitle;
+    hookupLabel.textContent = t.hookup;
     clickTip.textContent = t.clickTip;
-    objectivesTitle.textContent = t.objectivesTitle;
-    objectivesList.innerHTML = t.objectivesHTML;
+    btnStart.textContent = t.startButton;
 
-    // اتجاه النص العربي للأهداف وفقاعة العامل
+    stageIndicator.textContent = t.stages[state.stage] || "";
+
+    // RTL للأهداف وفقاعة العامل
     if (lang === 'ar') {
       objectivesPanel.classList.add('rtl');
       operatorDialog.classList.add('rtl');
@@ -536,39 +813,19 @@
       operatorDialog.classList.remove('rtl');
     }
 
-    // حساب WHP / FLP / الحالة
-    let whp, flp, statusKey;
+    // أهداف حسب المرحلة
+    objectivesTitle.textContent = t.objectivesTitle;
+    objectivesList.innerHTML = t.objectives[state.stage];
 
-    if (state.chokeRemoved) {
-      whp = 0;
-      flp = 0;
-      statusKey = 'choke_removed';
-    } else if (!state.upstreamRightOpen) {
-      // Shut-in
-      whp = 350;
-      flp = 0;
-      statusKey = 'shut_in';
-    } else {
-      // Upstream مفتوح
-      if (state.chokeBlocked) {
-        whp = 380;
-        flp = 80;
-        statusKey = 'suspected_blockage';
-      } else {
-        whp = 300;
-        flp = 150;
-        statusKey = 'flowing';
-      }
-    }
-
+    // ضغط وحالة
+    const { whp, flp, statusKey } = calcPressures();
     whpLabel.textContent = t.whp(whp);
     flpLabel.textContent = t.flp(flp);
 
-    const statusText = t.status[statusKey] || '';
+    statusLabel.className = 'status';
+    let statusText = t.status[statusKey] || '';
     statusLabel.textContent = statusText;
 
-    // كلاس الحالة
-    statusLabel.className = 'status';
     if (statusKey === 'flowing' || statusKey === 'normal') {
       statusLabel.classList.add('flowing');
       statusTip.textContent = t.statusTip_normal;
@@ -581,17 +838,52 @@
     } else if (statusKey === 'shut_in') {
       statusLabel.classList.add('shutin');
       statusTip.textContent = t.statusTip_shutin;
+    } else if (statusKey === 'sampling') {
+      statusLabel.classList.add('flowing');
+      statusTip.textContent = t.statusTip_sampling;
     }
 
-    // شكل الفالف والجوك حسب الحالة
+    // شكل الفالف والجوك والدرين
     upstreamRight.classList.remove('open', 'closed');
     upstreamRight.classList.add(state.upstreamRightOpen ? 'open' : 'closed');
 
-    adjBean.classList.toggle('removed', state.chokeRemoved);
+    adjBean.classList.toggle('removed', !state.chokeInstalled);
+    drainValve.classList.toggle('open', state.drainValveOpen);
+    sampleBottle.classList.toggle('filled', state.sampleCollected);
 
-    // حوار العامل
-    const opDialogs = t.operatorDialogs;
-    operatorDialog.textContent = opDialogs[statusKey] || opDialogs.normal;
+    // النص في فقاعة العامل
+    if (!skipDialog) {
+      const d = t.operatorDialogs;
+      let dialog = d.generic;
+
+      if (state.stage === 1) {
+        if (!state.chokeInstalled) {
+          dialog = d.stage1_removed;
+        } else if (!state.chokeBlocked && state.upstreamRightOpen) {
+          dialog = d.stage1_done;
+        } else if (!state.chokeBlocked && !state.upstreamRightOpen) {
+          dialog = d.stage1_cleaned;
+        } else {
+          dialog = d.stage1_start;
+        }
+      } else if (state.stage === 2) {
+        if (!state.drainFlushed) {
+          dialog = d.stage2_start;
+        } else if (state.drainFlushed && !state.bottlePlaced) {
+          dialog = d.stage2_flush;
+        } else if (state.bottlePlaced && !state.sampleCollected) {
+          dialog = d.stage2_place_bottle;
+        } else if (state.sampleCollected && state.drainValveOpen) {
+          dialog = d.stage2_need_close;
+        } else if (state.sampleCollected && !state.drainValveOpen) {
+          dialog = d.stage2_done;
+        }
+      } else if (state.stage === 3) {
+        dialog = d.finished;
+      }
+
+      operatorDialog.textContent = dialog;
+    }
 
     // أزرار اللغة
     if (lang === 'en') {
@@ -603,38 +895,124 @@
     }
   }
 
+  function checkStageProgress() {
+    // إنهاء المرحلة 1
+    if (state.stage === 1 &&
+        state.upstreamRightOpen &&
+        state.chokeInstalled &&
+        !state.chokeBlocked) {
+      state.stage = 2;
+      addLog('stage1_done');
+      updateUI(false);
+    }
+
+    // إنهاء المرحلة 2
+    if (state.stage === 2 &&
+        state.sampleCollected &&
+        !state.drainValveOpen) {
+      state.stage = 3;
+      addLog('stage2_done');
+      updateUI(false);
+    }
+  }
+
   // تفاعل UPSTREAM RIGHT
   upstreamRight.addEventListener('click', () => {
     state.upstreamRightOpen = !state.upstreamRightOpen;
-    updateUI();
+    addLog(state.upstreamRightOpen ? 'upstream_open' : 'upstream_closed');
+
+    // لو يحاول يفتح upstream والـ choke مو مركب → مسموح نظريًا لكن نترك المنطق ثابت
+    updateUI(false);
+    checkStageProgress();
   });
 
-  // تفاعل ADJ BEAN (رفع/تركيب الجوك + تنظيفه)
+  // تفاعل ADJ BEAN (نزع/تركيب الجوك)
   adjBean.addEventListener('click', () => {
-    if (!state.chokeRemoved) {
-      // نزع الجوك
-      state.chokeRemoved = true;
-    } else {
-      // إعادة الجوك وتركيب جوك نظيف (نعتبره cleaned → no blockage)
-      state.chokeRemoved = false;
-      state.chokeBlocked = false;
+    if (state.stage === 1 || state.stage === 2) {
+      if (state.chokeInstalled) {
+        // safety check
+        if (state.upstreamRightOpen) {
+          // ممنوع نزع الجوك والـ upstream مفتوح
+          operatorDialog.textContent = texts[state.lang].operatorDialogs.stage1_wrong_safety;
+          return;
+        }
+        state.chokeInstalled = false;
+        addLog('choke_removed');
+      } else {
+        // تركيب جوك – في المرحلة 1 نعتبره نظيف
+        state.chokeInstalled = true;
+        if (state.stage === 1) {
+          state.chokeBlocked = false;
+          addLog('choke_installed_clean');
+        } else {
+          addLog('choke_installed_dirty');
+        }
+      }
+
+      updateUI(false);
+      checkStageProgress();
     }
-    updateUI();
+  });
+
+  // زر قنينة العينة (نعتبرها clickable)
+  sampleBottle.addEventListener('click', () => {
+    if (state.stage !== 2) return;
+    state.bottlePlaced = true;
+    operatorDialog.textContent = texts[state.lang].placedBottle;
+    addLog('bottle_placed');
+    updateUI(true);
+  });
+
+  // تفاعل DRAIN SAMPLE
+  drainValve.addEventListener('click', () => {
+    if (state.stage !== 2) {
+      // يسمح بالتفاعل فقط في المرحلة 2
+      return;
+    }
+
+    // المرة الأولى: flushing
+    if (!state.drainFlushed) {
+      state.drainFlushed = true;
+      state.drainValveOpen = true;
+      addLog('drain_open_flush');
+    }
+    // بعد الـ flushing وإذا القنينة تحت: ملء العينة
+    else if (state.drainFlushed && state.bottlePlaced && !state.sampleCollected) {
+      state.sampleCollected = true;
+      state.drainValveOpen = true;
+      addLog('drain_open_fill');
+      addLog('sample_collected');
+    }
+    // بعد جمع العينة: إغلاق الفالف
+    else {
+      state.drainValveOpen = false;
+      addLog('drain_closed');
+    }
+
+    updateUI(false);
+    checkStageProgress();
   });
 
   // تغيير اللغة
   btnEN.addEventListener('click', () => {
     state.lang = 'en';
-    updateUI();
+    updateUI(false);
   });
 
   btnAR.addEventListener('click', () => {
     state.lang = 'ar';
-    updateUI();
+    updateUI(false);
   });
 
-  // تحديث أولي
-  updateUI();
+  // زر البدء / إعادة البدء
+  btnStart.addEventListener('click', () => {
+    resetState();
+  });
+
+  // أول تحميل
+  resetState();
+  // نغير النص الأولي فقط
+  operatorDialog.textContent = texts[state.lang].operatorDialogs.intro;
 </script>
 
 </body>
