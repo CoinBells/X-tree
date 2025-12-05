@@ -1,567 +1,701 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>KOC Wellhead Game – Desert Training</title>
-<style>
-  body{
-    margin:0;
-    background:#0b1116;
-    color:#eee;
-    font-family:Arial,Helvetica,sans-serif;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-  }
+  <meta charset="UTF-8" />
+  <title>🛢️ KOC X-Tree Training — Realistic 3D</title>
+  <style>
+    * { box-sizing: border-box; direction: rtl; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #11141f;
+      color: #fff;
+    }
+    #hud {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 330px;
+      max-width: 85vw;
+      background: rgba(5, 7, 15, 0.9);
+      border-radius: 12px;
+      padding: 10px 13px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(7px);
+      z-index: 10;
+    }
+    #hud h1 { font-size: 15px; margin: 0 0 3px 0; }
+    #hud p { margin: 3px 0; }
+    #hud small { opacity: 0.75; }
+    #objectiveText {
+      margin-top: 4px;
+      font-weight: 600;
+      color: #ffd27f;
+    }
+    #steps { list-style: none; padding: 0; margin: 4px 0 2px 0; }
+    #steps li { margin: 1px 0; font-size: 12px; }
+    .pending::before { content: "○ "; color: #999; }
+    .active::before  { content: "● "; color: #ffd27f; }
+    .done::before    { content: "✔ "; color: #4caf50; }
 
-  #gameContainer{
-    margin-top:10px;
-  }
+    #gaugesPanel {
+      margin-top: 5px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: radial-gradient(circle at top, #2a324a, #121420);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+    }
+    #gaugesPanel h3 { margin: 0 0 3px 0; font-size: 13px; }
+    #gaugesPanel p  { margin: 1px 0; font-size: 12px; }
 
-  canvas{
-    width:100%;
-    max-width:950px;
-    height:auto;
-    background:linear-gradient(to bottom,#9fc7ff 0%,#d6e8ff 35%,#f2d9a0 36%,#d3b074 100%);
-    border:3px solid #222;
-    image-rendering:pixelated;
-    box-shadow:0 0 12px rgba(0,0,0,0.7);
-  }
+    #statusBar {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #9effc0;
+      min-height: 16px;
+    }
+    #hint {
+      margin-top: 3px;
+      font-size: 11px;
+      color: #b6b6b6;
+    }
 
-  .hud{
-    margin-top:10px;
-    max-width:950px;
-    width:100%;
-    font-size:12px;
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:space-between;
-    gap:6px;
-  }
+    #completeOverlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.78);
+      z-index: 20;
+    }
+    #completeOverlay .box {
+      padding: 18px 22px;
+      background: #0c101f;
+      border-radius: 16px;
+      text-align: center;
+      border: 1px solid #4caf50;
+      box-shadow: 0 0 28px rgba(0,0,0,0.7);
+      max-width: 90vw;
+    }
+    #completeOverlay h2 { margin: 0 0 6px 0; font-size: 18px; }
+    #completeOverlay p  { margin: 4px 0; font-size: 13px; }
+    #completeOverlay button {
+      margin-top: 10px;
+      padding: 6px 15px;
+      border-radius: 999px;
+      border: none;
+      background: #4caf50;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    #completeOverlay button:hover { background: #3f9144; }
 
-  .hud-block{
-    flex:1 1 260px;
-    border:1px solid #444;
-    background:#151a1f;
-    padding:8px;
-    box-sizing:border-box;
-  }
-
-  .hud-title{
-    font-weight:bold;
-    text-align:left;
-    margin-bottom:4px;
-    font-size:13px;
-    color:#f2d9a0;
-  }
-
-  .hud-block p{
-    margin:2px 0;
-  }
-
-  .lang-switch{
-    text-align:right;
-    margin-bottom:4px;
-  }
-
-  .lang-switch button{
-    margin-left:4px;
-    padding:2px 8px;
-    font-size:11px;
-    border:1px solid #777;
-    background:#242b33;
-    color:#eee;
-    cursor:pointer;
-  }
-
-  .lang-switch .active{
-    background:#f2d9a0;
-    color:#111;
-    font-weight:bold;
-  }
-
-  .rtl{
-    direction:rtl;
-    text-align:right;
-  }
-
-  #pressureText,#statusText,#objText,#msgText{
-    line-height:1.5;
-  }
-
-  #statusText{
-    margin-top:4px;
-    color:#dcdcdc;
-  }
-
-  #controlHint{
-    margin-top:6px;
-    font-size:11px;
-    color:#aaa;
-  }
-
-  @media (max-width:720px){
-    .hud-block{flex:1 1 100%;}
-  }
-</style>
+    @media (max-width: 600px) {
+      #hud { left: 10px; width: auto; }
+      #hud h1 { font-size: 14px; }
+    }
+  </style>
 </head>
 <body>
+  <div id="hud">
+    <h1>🛢️ KOC X-Tree Training — 3D واقعي</h1>
+    <p><small>محاكاة واقعية لشجرة البئر والـ Hook-Up لتدريب الفيلد أوبريتر على WHP / FLP / Choke / Drain Sample.</small></p>
+    <p id="objectiveText"></p>
+    <ul id="steps">
+      <li id="step1" class="active">1- قراءة WHP &amp; FLP من شاشة القياسات</li>
+      <li id="step2" class="pending">2- إغلاق صمام Upstream قبل الشغل</li>
+      <li id="step3" class="pending">3- فك/تنظيف الـ Choke (ADJ BEAN)</li>
+      <li id="step4" class="pending">4- أخذ Drain Sample من خط الـ Hook-Up</li>
+    </ul>
 
-<div id="gameContainer">
-  <canvas id="game" width="900" height="500"></canvas>
-</div>
-
-<div class="hud">
-  <div class="hud-block" id="hud-info">
-    <div class="hud-title" id="hudTitle">Well Pressures</div>
-    <p id="pressureText">WHP: 380 psi<br>FLP: 80 psi</p>
-    <p id="statusText">Suspected choke blockage.</p>
-  </div>
-
-  <div class="hud-block" id="hud-obj">
-    <div class="lang-switch">
-      <button id="btnEn" class="active">EN</button>
-      <button id="btnAr">ع</button>
+    <div id="gaugesPanel">
+      <h3>📟 شاشة القياسات (اضغط للقراءة)</h3>
+      <p id="gaugeValues">WHP: --- psi | FLP: --- psi | CASING: --- psi</p>
+      <p id="gaugeStatus">الحالة: —</p>
     </div>
-    <div class="hud-title" id="objTitle">Training Objectives</div>
-    <p id="objText"></p>
+
+    <div id="statusBar"></div>
+    <div id="hint">
+      اسحب بإصبعك لتدوير الكاميرا، قرّب/أبعد بإصبعين (Zoom)، واضغط على الصمامات والـ Choke وصمام العينة للتفاعل.
+    </div>
   </div>
 
-  <div class="hud-block" id="hud-msg">
-    <div class="hud-title" id="msgTitle">Field Operator</div>
-    <p id="msgText"></p>
-    <p id="controlHint">Move: Arrows / WASD – Action: E – Restart: R</p>
+  <div id="completeOverlay">
+    <div class="box">
+      <h2>✅ التدريب اكتمل بنجاح</h2>
+      <p>نفذت كل خطوات الفيلد أوبريتر على الـ X-Tree والـ Hook-Up: تشخيص انسداد الـ Choke وأخذ Drain Sample بأمان.</p>
+      <button onclick="restartTraining()">إعادة التجربة</button>
+    </div>
   </div>
-</div>
 
-<script>
-const canvas=document.getElementById('game');
-const ctx=canvas.getContext('2d');
+  <!-- Three.js -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
-const hudTitle=document.getElementById('hudTitle');
-const pressureText=document.getElementById('pressureText');
-const statusText=document.getElementById('statusText');
-const objTitle=document.getElementById('objTitle');
-const objText=document.getElementById('objText');
-const msgTitle=document.getElementById('msgTitle');
-const msgText=document.getElementById('msgText');
-const btnEn=document.getElementById('btnEn');
-const btnAr=document.getElementById('btnAr');
-const hudObj=document.getElementById('hud-obj');
-const hudMsg=document.getElementById('hud-msg');
-const controlHint=document.getElementById('controlHint');
+  <script>
+    let scene, camera, renderer, controls;
+    let raycaster, pointer;
+    const interactiveObjects = [];
 
-const texts={
-  en:{
-    hudTitle:"Well Pressures",
-    objTitle:"Training Objectives",
-    msgTitle:"Field Operator",
-    pressure:(W,F)=>`WHP: ${W} psi<br>FLP: ${F} psi`,
-    status:{
-      blocked:"Suspected choke blockage.",
-      flowing:"Flowing – normal operation.",
-      removed:"Choke removed – line isolated.",
-      shutin:"Well shut-in.",
-      sampling:"Drain sampling in progress."
-    },
-    objectives:{
-      1:`• WHP high, FLP low → suspect choke blockage.<br>
-• Walk to UPSTREAM valve and press [E] to close it.<br>
-• Walk to ADJ BEAN and press [E] to pull the choke.<br>
-• Press [E] again at ADJ BEAN to install a clean choke.<br>
-• Open UPSTREAM again and confirm pressures are normal.`,
-      2:`• Keep the well flowing with a clean choke.<br>
-• Walk to DRAIN SAMPLE valve on the hook-up and press [E] to flush the line.<br>
-• Walk to the bottle and press [E] to place it under the outlet.<br>
-• Press [E] again at DRAIN SAMPLE to fill the bottle.<br>
-• Press [E] again to close the drain valve.`,
-      3:`Training complete. You diagnosed blockage, cleaned the choke,
-and took a drain sample safely.`
-    },
-    operator:{
-      intro:"I'm the field operator. Walk to the wellhead and follow the objectives.",
-      s1_start:"Stage 1: WHP is high and FLP is low – I suspect choke blockage. Close UPSTREAM then pull the choke.",
-      s1_wrong:"Never pull the choke with UPSTREAM open. Close the valve first.",
-      s1_removed:"Choke is out. After cleaning, install a clean choke and reopen UPSTREAM.",
-      s1_done:"Good, pressures are normal again. Now we will take a drain sample from the hook-up.",
-      s2_start:"Stage 2: First flush the drain line, then place the bottle and collect the sample.",
-      s2_flush:"Drain line flushing… short controlled flow.",
-      s2_bottle:"Bottle in place. Open the drain again to fill it – just enough for the lab.",
-      s2_needclose:"Close the drain valve. We never leave a drain open.",
-      s2_done:"Sample collected and drain closed. Clean and safe job.",
-      finished:"Training complete – well done."
-    },
-    controlHint:"Move: Arrows / WASD – Action: E – Restart: R"
-  },
-  ar:{
-    hudTitle:"الضغوط وحالة البئر",
-    objTitle:"أهداف التدريب",
-    msgTitle:"الفيلد أوبريتر",
-    pressure:(W,F)=>`ضغط رأس البئر WHP: ${W} psi<br>ضغط خط الجريان FLP: ${F} psi`,
-    status:{
-      blocked:"يُشتبه بوجود انسداد في الجوك.",
-      flowing:"البئر ينتج بشكل طبيعي.",
-      removed:"تم نزع الجوك – الخط معزول.",
-      shutin:"البئر مغلق (Shut-in).",
-      sampling:"جاري أخذ Drain Sample."
-    },
-    objectives:{
-      1:`• WHP عالي و FLP منخفض → اشتباه انسداد.<br>
-• تحرّك إلى فالف UPSTREAM واضغط [E] لإغلاقه.<br>
-• تحرّك إلى ADJ BEAN واضغط [E] لنزع الجوك.<br>
-• اضغط [E] مرة أخرى عند ADJ BEAN لتركيب جوك نظيف.<br>
-• افتح UPSTREAM مرة ثانية وتأكد أن الضغوط طبيعية.`,
-      2:`• خلي البئر في وضع إنتاج مع جوك نظيف.<br>
-• تحرّك إلى فالف DRAIN SAMPLE على الـ hook-up واضغط [E] لتفريغ الخط.<br>
-• تحرّك إلى قنينة العينة واضغط [E] لوضعها تحت المخرج.<br>
-• اضغط [E] على DRAIN SAMPLE لتعبئة القنينة.<br>
-• اضغط [E] مرة أخيرة لإغلاق فالف الـ Drain.`,
-      3:`تم إنهاء التدريب. شخّصت الانسداد، نظّفت الجوك، وأخذت Drain Sample بطريقة آمنة.`
-    },
-    operator:{
-      intro:"أنا الفيلد أوبريتر. تحرّك إلى شجرة البئر واتبع الأهداف على اليمين.",
-      s1_start:"المرحلة 1: WHP عالي و FLP منخفض – نشتبه في انسداد الجوك. نسكّر UPSTREAM ثم نطلع الجوك.",
-      s1_wrong:"ما نطلع الجوك والـ UPSTREAM مفتوح أبدًا. أول شي نسكّر الفالف.",
-      s1_removed:"الجوك طالع. بعد تنظيفه ركب جوك نظيف وافتح UPSTREAM.",
-      s1_done:"الضغوط رجعت طبيعية. الحين ننتقل إلى أخذ Drain Sample من الـ hook-up.",
-      s2_start:"المرحلة 2: نفرّغ خط الـ Drain، بعدين نحط القنينة ونجمع العينة.",
-      s2_flush:"جاري تفريغ خط الـ Drain… فلو بسيط ومتحكَّم فيه.",
-      s2_bottle:"القنينة في مكانها. افتح الـ Drain مرة ثانية لتمتلئ بكمية كافية للمختبر.",
-      s2_needclose:"سكّر فالف الـ Drain، ما نتركه مفتوح.",
-      s2_done:"العينة جاهزة والـ Drain مقفول. شغل نظيف.",
-      finished:"التدريب انتهى – شغلك ممتاز."
-    },
-    controlHint:"الحركة: الأسهم / WASD – تنفيذ: E – إعادة: R"
-  }
-};
+    // حالة اللعبة
+    let gameStep = 0;
+    let whp = 360;
+    let flp = 35;
+    let casingPressure = 0;
+    let blockageCleared = false;
+    let upstreamClosed = false;
+    let sampleTaken = false;
 
-let lang="ar";
-let stage=1;
-let upstreamOpen=true;
-let chokeInstalled=true;
-let chokeBlocked=true;
-let drainOpen=false;
-let drainFlushed=false;
-let bottlePlaced=false;
-let sampleCollected=false;
+    const objectiveText = document.getElementById("objectiveText");
+    const gaugeValues = document.getElementById("gaugeValues");
+    const gaugeStatus = document.getElementById("gaugeStatus");
+    const statusBar   = document.getElementById("statusBar");
+    const completeOverlay = document.getElementById("completeOverlay");
 
-const player={x:130,y:360,speed:2.0};
+    const stepEls = {
+      1: document.getElementById("step1"),
+      2: document.getElementById("step2"),
+      3: document.getElementById("step3"),
+      4: document.getElementById("step4")
+    };
 
-const zones={
-  upstream:{x:600,y:220,r:38},
-  adj:{x:640,y:320,r:38},
-  drain:{x:760,y:260,r:38},
-  bottle:{x:790,y:330,r:34}
-};
-
-const keys={};
-window.addEventListener("keydown",e=>{
-  keys[e.key.toLowerCase()]=true;
-  if(e.key==="r"||e.key==="R") resetGame();
-});
-window.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false;});
-
-function getPressures(){
-  if(!chokeInstalled) return {whp:0,flp:0,status:"removed"};
-  if(!upstreamOpen)  return {whp:350,flp:0,status:"shutin"};
-  if(chokeBlocked)   return {whp:380,flp:80,status:"blocked"};
-  if(stage===2 && (drainOpen || sampleCollected)) return {whp:300,flp:140,status:"sampling"};
-  return {whp:300,flp:150,status:"flowing"};
-}
-
-function updateHUD(custom){
-  const t=texts[lang];
-  const p=getPressures();
-  hudTitle.textContent=t.hudTitle;
-  objTitle.textContent=t.objTitle;
-  msgTitle.textContent=t.msgTitle;
-  pressureText.innerHTML=t.pressure(p.whp,p.flp);
-  statusText.textContent=t.status[p.status]||"";
-  objText.innerHTML=t.objectives[stage];
-  controlHint.textContent=t.controlHint;
-
-  let msg=t.operator.intro;
-  if(custom) msg=custom;
-  else{
-    if(stage===1){
-      if(!chokeInstalled) msg=t.operator.s1_removed;
-      else if(!chokeBlocked && upstreamOpen) msg=t.operator.s1_done;
-      else msg=t.operator.s1_start;
-    }else if(stage===2){
-      if(!drainFlushed) msg=t.operator.s2_start;
-      else if(drainFlushed && !bottlePlaced) msg=t.operator.s2_flush;
-      else if(bottlePlaced && !sampleCollected) msg=t.operator.s2_bottle;
-      else if(sampleCollected && drainOpen) msg=t.operator.s2_needclose;
-      else if(sampleCollected && !drainOpen) msg=t.operator.s2_done;
-    }else if(stage===3){
-      msg=t.operator.finished;
+    function setStepState(step, state) {
+      stepEls[step].className = state;
     }
-  }
-  msgText.textContent=msg;
 
-  if(lang==="ar"){
-    hudObj.classList.add("rtl");
-    hudMsg.classList.add("rtl");
-  }else{
-    hudObj.classList.remove("rtl");
-    hudMsg.classList.remove("rtl");
-  }
-}
-
-function updatePlayer(){
-  let dx=0,dy=0;
-  if(keys["arrowup"]||keys["w"]) dy-=1;
-  if(keys["arrowdown"]||keys["s"]) dy+=1;
-  if(keys["arrowleft"]||keys["a"]) dx-=1;
-  if(keys["arrowright"]||keys["d"]) dx+=1;
-  if(dx||dy){
-    const len=Math.hypot(dx,dy)||1;
-    dx/=len; dy/=len;
-    player.x+=dx*player.speed;
-    player.y+=dy*player.speed;
-  }
-  player.x=Math.max(40,Math.min(canvas.width-40,player.x));
-  player.y=Math.max(80,Math.min(canvas.height-25,player.y));
-}
-
-function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
-
-window.addEventListener("keydown",e=>{
-  if(e.key.toLowerCase()!=="e") return;
-  handleAction();
-});
-
-function handleAction(){
-  const t=texts[lang];
-  const pos={x:player.x,y:player.y};
-  const dUp=dist(pos,zones.upstream);
-  const dAdj=dist(pos,zones.adj);
-  const dDr=dist(pos,zones.drain);
-  const dBo=dist(pos,zones.bottle);
-  let msgOverride=null;
-
-  if(dUp<zones.upstream.r){
-    upstreamOpen=!upstreamOpen;
-    updateHUD();
-    return;
-  }
-
-  if(dAdj<zones.adj.r && (stage===1||stage===2)){
-    if(chokeInstalled){
-      if(upstreamOpen){
-        msgOverride=t.operator.s1_wrong;
-      }else{
-        chokeInstalled=false;
+    function updateObjective() {
+      switch (gameStep) {
+        case 0:
+          objectiveText.textContent =
+            "ابدأ بقراءة WHP و FLP من شاشة القياسات لتشخيص وجود Blockage على الـ Choke.";
+          setStepState(1, "active");
+          setStepState(2, "pending");
+          setStepState(3, "pending");
+          setStepState(4, "pending");
+          break;
+        case 1:
+          objectiveText.textContent =
+            "أغلق صمام Upstream (wing valve على الجناح الأزرق) قبل التعامل مع الـ Choke.";
+          setStepState(1, "done");
+          setStepState(2, "active");
+          break;
+        case 2:
+          objectiveText.textContent =
+            "اضغط على صندوق الـ ADJ BEAN Choke لفكه وتنظيف الانسداد، ثم راقب تغير WHP/FLP.";
+          setStepState(2, "done");
+          setStepState(3, "active");
+          break;
+        case 3:
+          objectiveText.textContent =
+            "اضغط على صمام Drain Sample في خط الـ Hook-Up لأخذ عينة من التدفق.";
+          setStepState(3, "done");
+          setStepState(4, "active");
+          break;
+        case 4:
+          objectiveText.textContent =
+            "التدريب مكتمل، يمكنك إعادة التجربة أو استكشاف الـ X-Tree في وضع حر.";
+          setStepState(4, "done");
+          break;
       }
-    }else{
-      chokeInstalled=true;
-      chokeBlocked=false;
     }
-    updateHUD(msgOverride);
-    checkStages();
-    return;
-  }
 
-  if(dDr<zones.drain.r && stage===2){
-    if(!drainFlushed){
-      drainFlushed=true;
-      drainOpen=true;
-      msgOverride=t.operator.s2_flush;
-    }else if(drainFlushed && bottlePlaced && !sampleCollected){
-      sampleCollected=true;
-      drainOpen=true;
-      msgOverride=t.operator.s2_bottle;
-    }else{
-      drainOpen=false;
-      msgOverride=t.operator.s2_needclose;
+    function updateGaugesText() {
+      gaugeValues.textContent =
+        "WHP: " + whp.toFixed(0) +
+        " psi | FLP: " + flp.toFixed(0) +
+        " psi | CASING: " + casingPressure.toFixed(0) + " psi";
+
+      if (!blockageCleared) {
+        gaugeStatus.textContent =
+          "الحالة: احتمال Blockage على الـ Choke (فرق كبير بين WHP و FLP).";
+      } else {
+        gaugeStatus.textContent =
+          "الحالة: التدفق طبيعي بعد تنظيف الـ Choke (FLP قريب من WHP).";
+      }
     }
-    updateHUD(msgOverride);
-    checkStages();
-    return;
-  }
 
-  if(dBo<zones.bottle.r && stage===2){
-    bottlePlaced=true;
-    updateHUD(t.operator.s2_bottle);
-    return;
-  }
-}
+    function setStatus(msg, color) {
+      statusBar.textContent = msg || "";
+      statusBar.style.color = color || "#9effc0";
+    }
 
-function checkStages(){
-  if(stage===1 && upstreamOpen && chokeInstalled && !chokeBlocked){
-    stage=2;
-  }
-  if(stage===2 && sampleCollected && !drainOpen){
-    stage=3;
-  }
-}
+    function completeTraining() {
+      gameStep = 4;
+      updateObjective();
+      completeOverlay.style.display = "flex";
+      setStatus("اكتمل التدريب. يمكنك إعادة التجربة.", "#9effc0");
+    }
 
-function drawDesert(){
-  // السماء والخلفية جاهزة من الـ background; نضيف تلال رمل
-  ctx.fillStyle="#e8c985";
-  ctx.fillRect(0,330,canvas.width,40);
-  ctx.fillStyle="#d2b274";
-  ctx.fillRect(0,360,canvas.width,140);
+    function restartTraining() {
+      completeOverlay.style.display = "none";
+      gameStep = 0;
+      whp = 360;
+      flp = 35;
+      casingPressure = 0;
+      blockageCleared = false;
+      upstreamClosed = false;
+      sampleTaken = false;
 
-  // تلال
-  ctx.fillStyle="#e2c07e";
-  ctx.beginPath();
-  ctx.moveTo(50,360);
-  ctx.lineTo(170,320);
-  ctx.lineTo(260,360);
-  ctx.closePath();
-  ctx.fill();
+      interactiveObjects.forEach(obj => {
+        if (obj.userData.type === "upstream") obj.material.color.set(0x00b894); // أخضر
+        if (obj.userData.type === "choke")    obj.material.color.set(0xffc107); // أصفر
+        if (obj.userData.type === "drain")    obj.material.color.set(0x87cefa); // أزرق فاتح
+      });
 
-  ctx.beginPath();
-  ctx.moveTo(380,360);
-  ctx.lineTo(520,310);
-  ctx.lineTo(650,360);
-  ctx.closePath();
-  ctx.fill();
+      updateObjective();
+      updateGaugesText();
+      setStatus("تمت إعادة ضبط التدريب.", "#9effc0");
+    }
 
-  ctx.beginPath();
-  ctx.moveTo(680,360);
-  ctx.lineTo(820,330);
-  ctx.lineTo(920,360);
-  ctx.closePath();
-  ctx.fill();
+    // HUD panel click = قراءة القياسات
+    document.getElementById("gaugesPanel").addEventListener("click", () => {
+      if (gameStep === 0) {
+        setStatus("قراءة WHP و FLP من شاشة القياسات...", "#ffd27f");
+        updateGaugesText();
+        gameStep = 1;
+        updateObjective();
+      } else {
+        updateGaugesText();
+        setStatus("تم تحديث قراءة القياسات.", "#9effc0");
+      }
+    });
 
-  // ظل بسيط
-  ctx.fillStyle="rgba(0,0,0,0.15)";
-  ctx.fillRect(0,360,canvas.width,8);
-}
+    function initScene() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xb9e4ff); // سما كويت
 
-function drawWellhead(){
-  // أنابيب X-tree
-  ctx.fillStyle="#b7c1c9";
-  ctx.fillRect(636,150,8,180);         // vertical
-  ctx.fillRect(586,220,100,8);         // cross
-  // hook-up
-  ctx.fillRect(700,250,120,8);
-  // drain line
-  ctx.fillRect(816,250,8,60);
-}
+      camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        200
+      );
+      camera.position.set(12, 9, 16);
 
-// رسم دائرة فالف مربّع ستايل بكسل
-function drawValve(zone,color,label){
-  ctx.fillStyle="#111";
-  ctx.fillRect(zone.x-24,zone.y-24,48,48);
-  ctx.fillStyle=color;
-  ctx.fillRect(zone.x-20,zone.y-20,40,40);
-  ctx.fillStyle="#000";
-  ctx.font="9px Arial";
-  ctx.textAlign="center";
-  ctx.textBaseline="middle";
-  const parts=label.split("\n");
-  ctx.fillText(parts[0],zone.x,zone.y-5);
-  if(parts[1]) ctx.fillText(parts[1],zone.x,zone.y+6);
-}
+      renderer = new THREE.WebGLRenderer({ antialias: false });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio * 0.8, 1.6));
+      document.body.appendChild(renderer.domElement);
 
-function drawBottle(){
-  ctx.fillStyle="#111";
-  ctx.fillRect(zones.bottle.x-10,zones.bottle.y-20,20,30);
-  ctx.fillStyle="#f5f5ff";
-  ctx.fillRect(zones.bottle.x-8,zones.bottle.y-18,16,26);
-  if(sampleCollected){
-    ctx.fillStyle="#b47a3a";
-    ctx.fillRect(zones.bottle.x-8,zones.bottle.y-4,16,12);
-  }
-}
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 3.2, 0);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.minDistance = 7;
+      controls.maxDistance = 35;
+      controls.maxPolarAngle = Math.PI / 2.1;
 
-function drawPlayer(){
-  // جسم العامل – استايل بسيط
-  ctx.fillStyle="#2053a3";
-  ctx.fillRect(player.x-8,player.y-26,16,24);
-  // رأس
-  ctx.fillStyle="#f0d2a4";
-  ctx.fillRect(player.x-8,player.y-42,16,16);
-  // خوذة
-  ctx.fillStyle="#f5d35b";
-  ctx.fillRect(player.x-10,player.y-46,20,8);
-  ctx.fillStyle="#e2b73d";
-  ctx.fillRect(player.x-10,player.y-46,20,3);
-  // أرجل
-  ctx.fillStyle="#2053a3";
-  ctx.fillRect(player.x-8,player.y-2,6,8);
-  ctx.fillRect(player.x+2,player.y-2,6,8);
-  // أحذية
-  ctx.fillStyle="#333";
-  ctx.fillRect(player.x-8,player.y+6,6,4);
-  ctx.fillRect(player.x+2,player.y+6,6,4);
-}
+      // إضاءة واقعية
+      const hemiLight = new THREE.HemisphereLight(0xffffee, 0xb89b6a, 0.7);
+      hemiLight.position.set(0, 40, 0);
+      scene.add(hemiLight);
 
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+      const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+      sun.position.set(25, 35, 10);
+      sun.castShadow = false;
+      scene.add(sun);
 
-  drawDesert();
-  drawWellhead();
+      // أرضية صحراوية
+      const groundGeo = new THREE.PlaneGeometry(120, 120, 32, 32);
+      const groundMat = new THREE.MeshStandardMaterial({
+        color: 0xd8be8e,
+        roughness: 0.95,
+        metalness: 0.0
+      });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = 0;
+      scene.add(ground);
 
-  const p=getPressures();
-  const colUp=upstreamOpen?"#1fc46d":"#c43939";
-  const colAdj=!chokeInstalled?"#e3b33b":(chokeBlocked?"#c43939":"#1fc46d");
-  const colDr=stage===2?(drainOpen?"#31bde3":"#d0d4d8"):"#a0a4a8";
+      // تلال صغيرة
+      for (let i = 0; i < 18; i++) {
+        const hillGeo = new THREE.ConeGeometry(
+          0.8 + Math.random() * 1.8,
+          0.7 + Math.random() * 1.3,
+          6
+        );
+        const hillMat = new THREE.MeshStandardMaterial({
+          color: 0xcfa471,
+          roughness: 1.0
+        });
+        const hill = new THREE.Mesh(hillGeo, hillMat);
+        hill.position.set(
+          (Math.random() - 0.5) * 80,
+          0.45,
+          (Math.random() - 0.5) * 80
+        );
+        hill.rotation.y = Math.random() * Math.PI;
+        scene.add(hill);
+      }
 
-  drawValve(zones.upstream,colUp,"UP\nSTREAM");
-  drawValve(zones.adj,colAdj,"ADJ\nBEAN");
-  drawValve(zones.drain,colDr,"DRAIN\nSAMPLE");
+      // منصة خرسانية صغيرة تحت الشجرة
+      const padGeo = new THREE.BoxGeometry(10, 0.4, 10);
+      const padMat = new THREE.MeshStandardMaterial({
+        color: 0x9c9c9c,
+        roughness: 0.8,
+        metalness: 0.1
+      });
+      const pad = new THREE.Mesh(padGeo, padMat);
+      pad.position.set(0, 0.2, 0);
+      scene.add(pad);
 
-  drawBottle();
-  drawPlayer();
+      // قاعدة الشجرة المعدنية
+      const baseGeo = new THREE.CylinderGeometry(1.2, 1.4, 0.6, 14);
+      const baseMat = new THREE.MeshStandardMaterial({
+        color: 0x5b6067,
+        metalness: 0.5,
+        roughness: 0.4
+      });
+      const base = new THREE.Mesh(baseGeo, baseMat);
+      base.position.set(0, 0.7, 0);
+      scene.add(base);
 
-  requestAnimationFrame(loop);
-}
+      // أنبوب رأسي للشجرة
+      const vertGeo = new THREE.CylinderGeometry(0.3, 0.3, 4.5, 14);
+      const vertMat = new THREE.MeshStandardMaterial({
+        color: 0xb3b3b3,
+        metalness: 0.5,
+        roughness: 0.3
+      });
+      const vertPipe = new THREE.Mesh(vertGeo, vertMat);
+      vertPipe.position.set(0, 3.0, 0);
+      scene.add(vertPipe);
 
-function updatePlayerLoop(){
-  let dx=0,dy=0;
-  if(keys["arrowup"]||keys["w"]) dy-=1;
-  if(keys["arrowdown"]||keys["s"]) dy+=1;
-  if(keys["arrowleft"]||keys["a"]) dx-=1;
-  if(keys["arrowright"]||keys["d"]) dx+=1;
-  if(dx||dy){
-    const len=Math.hypot(dx,dy)||1;
-    dx/=len; dy/=len;
-    player.x+=dx*player.speed;
-    player.y+=dy*player.speed;
-  }
-  player.x=Math.max(40,Math.min(canvas.width-40,player.x));
-  player.y=Math.max(80,Math.min(canvas.height-25,player.y));
-}
+      // مادة صدأ للصمامات
+      const rustMat = new THREE.MeshStandardMaterial({
+        color: 0x8a4c2c,
+        metalness: 0.3,
+        roughness: 0.8
+      });
 
-function loop(){
-  updatePlayerLoop();
-  draw();
-}
+      // دالة لصنع handwheel مع صمام
+      function createRustValve(y, sideOffset, interactiveType) {
+        const group = new THREE.Group();
 
-function resetGame(){
-  stage=1;
-  upstreamOpen=true;
-  chokeInstalled=true;
-  chokeBlocked=true;
-  drainOpen=false;
-  drainFlushed=false;
-  bottlePlaced=false;
-  sampleCollected=false;
-  player.x=130;
-  player.y=360;
-  updateHUD(texts[lang].operator.intro);
-}
+        // جسم الصمام
+        const valveBodyGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.4, 14);
+        const valveBody = new THREE.Mesh(valveBodyGeo, rustMat);
+        valveBody.position.set(sideOffset, y, 0);
+        valveBody.rotation.z = Math.PI / 2;
+        group.add(valveBody);
 
-btnEn.onclick=()=>{
-  lang="en";
-  btnEn.classList.add("active");
-  btnAr.classList.remove("active");
-  updateHUD();
-};
-btnAr.onclick=()=>{
-  lang="ar";
-  btnAr.classList.add("active");
-  btnEn.classList.remove("active");
-  updateHUD();
-};
+        // handwheel
+        const wheelGeo = new THREE.TorusGeometry(0.7, 0.08, 10, 22);
+        const wheel = new THREE.Mesh(wheelGeo, rustMat);
+        wheel.position.set(sideOffset, y, 0);
+        wheel.rotation.x = Math.PI / 2;
+        group.add(wheel);
 
-resetGame();
-requestAnimationFrame(loop);
-</script>
+        // stem
+        const stemGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.6, 10);
+        const stem = new THREE.Mesh(stemGeo, rustMat);
+        stem.position.set(sideOffset, y + 0.5, 0);
+        group.add(stem);
 
+        scene.add(group);
+
+        if (interactiveType) {
+          // نخلي الـ wheel هو التفاعلي
+          wheel.userData.type = interactiveType;
+          interactiveObjects.push(wheel);
+          return wheel;
+        }
+        return group;
+      }
+
+      // handwheels رأسية (مثل الصورة الأولى)
+      createRustValve(4.0, 0, null); // upper
+      createRustValve(3.0, 0, null); // middle
+      createRustValve(2.0, 0, null); // lower
+
+      // أذرع جانبية رئيسية (cross)
+      const armGeo = new THREE.CylinderGeometry(0.22, 0.22, 3.2, 14);
+      const armMat = new THREE.MeshStandardMaterial({
+        color: 0xb3b3b3,
+        metalness: 0.5,
+        roughness: 0.35
+      });
+
+      const leftArm = new THREE.Mesh(armGeo, armMat);
+      leftArm.rotation.z = Math.PI / 2;
+      leftArm.position.set(-1.7, 3.0, 0);
+      scene.add(leftArm);
+
+      const rightArm = new THREE.Mesh(armGeo, armMat);
+      rightArm.rotation.z = Math.PI / 2;
+      rightArm.position.set(1.7, 3.0, 0);
+      scene.add(rightArm);
+
+      // صمام جانبي يسار (Rusty غير تفاعلي)
+      createRustValve(3.0, -3.0, null);
+
+      // صمام جانبي يمين (Upstream تفاعلي لكن لونه أزرق/ستيل مثل الصورة الثانية)
+      const upValveBodyGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.5, 16);
+      const upValveMat = new THREE.MeshStandardMaterial({
+        color: 0x00b894, // أخضر مفتوح
+        metalness: 0.6,
+        roughness: 0.35
+      });
+      const upstreamValve = new THREE.Mesh(upValveBodyGeo, upValveMat);
+      upstreamValve.position.set(3.0, 3.0, 0);
+      upstreamValve.rotation.z = Math.PI / 2;
+      upstreamValve.userData.type = "upstream";
+      interactiveObjects.push(upstreamValve);
+      scene.add(upstreamValve);
+
+      const upWheelGeo = new THREE.TorusGeometry(0.75, 0.09, 10, 24);
+      const upWheelMat = new THREE.MeshStandardMaterial({
+        color: 0xeeeeee,
+        metalness: 0.6,
+        roughness: 0.25
+      });
+      const upWheel = new THREE.Mesh(upWheelGeo, upWheelMat);
+      upWheel.position.set(3.0, 3.0, 0);
+      upWheel.rotation.x = Math.PI / 2;
+      // نخلي الـ wheel أيضاً تفاعلي كنسخة ثانية
+      upWheel.userData.type = "upstream";
+      interactiveObjects.push(upWheel);
+      scene.add(upWheel);
+
+      // Hook-Up / Flowline assembly (شبيه بالصورة الثانية)
+
+      // أنبوب خارج من يمين الشجرة إلى manifold أزرق
+      const line1Geo = new THREE.CylinderGeometry(0.18, 0.18, 3.2, 14);
+      const lineSteelMat = new THREE.MeshStandardMaterial({
+        color: 0xd0d8e0,
+        metalness: 0.7,
+        roughness: 0.25
+      });
+      const line1 = new THREE.Mesh(line1Geo, lineSteelMat);
+      line1.rotation.z = Math.PI / 2;
+      line1.position.set(4.4, 3.0, 0);
+      scene.add(line1);
+
+      // manifold / choke block أزرق مثل KOC
+      const chokeBlockGeo = new THREE.BoxGeometry(1.5, 0.9, 0.9);
+      const chokeBlockMat = new THREE.MeshStandardMaterial({
+        color: 0x124d92,
+        metalness: 0.6,
+        roughness: 0.35
+      });
+      const chokeBlock = new THREE.Mesh(chokeBlockGeo, chokeBlockMat);
+      chokeBlock.position.set(6.0, 3.0, 0);
+      chokeBlock.userData.type = "choke";
+      interactiveObjects.push(chokeBlock);
+      scene.add(chokeBlock);
+
+      // handwheel على choke
+      const chokeWheel = new THREE.Mesh(
+        new THREE.TorusGeometry(0.6, 0.08, 10, 22),
+        new THREE.MeshStandardMaterial({
+          color: 0xf5f5f5,
+          metalness: 0.7,
+          roughness: 0.25
+        })
+      );
+      chokeWheel.position.set(6.0, 3.4, 0.45);
+      chokeWheel.rotation.y = Math.PI / 2;
+      chokeWheel.userData.type = "choke";
+      interactiveObjects.push(chokeWheel);
+      scene.add(chokeWheel);
+
+      // خط بعد الـ choke نازل للأرض (Hook-Up)
+      const downGeo = new THREE.CylinderGeometry(0.16, 0.16, 2.6, 12);
+      const downPipe = new THREE.Mesh(downGeo, lineSteelMat);
+      downPipe.position.set(7.2, 2.0, 0);
+      scene.add(downPipe);
+
+      const elbowGeo = new THREE.TorusGeometry(0.16, 0.08, 8, 16, Math.PI / 2);
+      const elbow = new THREE.Mesh(elbowGeo, lineSteelMat);
+      elbow.position.set(7.2, 0.7, 0);
+      elbow.rotation.z = Math.PI / 2;
+      scene.add(elbow);
+
+      const hookLineGeo = new THREE.CylinderGeometry(0.16, 0.16, 4.5, 12);
+      const hookLine = new THREE.Mesh(hookLineGeo, lineSteelMat);
+      hookLine.rotation.z = Math.PI / 2;
+      hookLine.position.set(9.4, 0.7, -1.0);
+      scene.add(hookLine);
+
+      // صمام Drain Sample على الخط
+      const drainValveGeo = new THREE.SphereGeometry(0.28, 18, 18);
+      const drainValveMat = new THREE.MeshStandardMaterial({
+        color: 0x87cefa,
+        metalness: 0.5,
+        roughness: 0.3
+      });
+      const drainValve = new THREE.Mesh(drainValveGeo, drainValveMat);
+      drainValve.position.set(11.0, 0.7, -1.0);
+      drainValve.userData.type = "drain";
+      interactiveObjects.push(drainValve);
+      scene.add(drainValve);
+
+      // Gauge panel 3D
+      const gaugePanelGeo = new THREE.BoxGeometry(2.0, 1.2, 0.16);
+      const gaugePanelMat = new THREE.MeshStandardMaterial({
+        color: 0x111a26,
+        emissive: 0x0b1628,
+        roughness: 0.6
+      });
+      const gaugePanel3D = new THREE.Mesh(gaugePanelGeo, gaugePanelMat);
+      gaugePanel3D.position.set(-6.0, 3.0, 3.5);
+      gaugePanel3D.userData.type = "gauges3d";
+      interactiveObjects.push(gaugePanel3D);
+      scene.add(gaugePanel3D);
+
+      // legs
+      const legGeo = new THREE.CylinderGeometry(0.09, 0.09, 2.0, 10);
+      const legMat = new THREE.MeshStandardMaterial({
+        color: 0x444444,
+        roughness: 0.7
+      });
+      const leg1 = new THREE.Mesh(legGeo, legMat);
+      leg1.position.set(-6.4, 2.0, 3.5);
+      scene.add(leg1);
+      const leg2 = leg1.clone();
+      leg2.position.set(-5.6, 2.0, 3.5);
+      scene.add(leg2);
+
+      // إعداد Raycaster + Pointer
+      raycaster = new THREE.Raycaster();
+      pointer = new THREE.Vector2();
+
+      window.addEventListener("pointerdown", onPointerDown, false);
+      window.addEventListener("resize", onWindowResize, false);
+
+      updateObjective();
+      updateGaugesText();
+      setStatus("ابدأ بقراءة WHP و FLP من شاشة القياسات (HUD أو لوحة 3D).", "#ffd27f");
+    }
+
+    function onPointerDown(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      pointer.x = (x / rect.width) * 2 - 1;
+      pointer.y = -(y / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects(interactiveObjects, true);
+
+      if (intersects.length === 0) return;
+
+      let obj = intersects[0].object;
+      while (obj && !obj.userData.type && obj.parent) obj = obj.parent;
+      if (!obj || !obj.userData.type) return;
+
+      handleGameClick(obj.userData.type, obj);
+    }
+
+    function handleGameClick(type, obj) {
+      if (type === "gauges3d") {
+        if (gameStep === 0) {
+          setStatus("قراءة WHP و FLP من لوحة القياسات 3D...", "#ffd27f");
+          updateGaugesText();
+          gameStep = 1;
+          updateObjective();
+        } else {
+          updateGaugesText();
+          setStatus("تم تحديث القراءة من لوحة القياسات.", "#9effc0");
+        }
+        return;
+      }
+
+      if (type === "upstream") {
+        if (gameStep < 1) {
+          setStatus("أقرأ القياسات أولاً قبل إغلاق صمام Upstream.", "#ff8080");
+          return;
+        }
+        if (!upstreamClosed) {
+          upstreamClosed = true;
+          obj.material.color.set(0xe53935); // أحمر = مغلق
+          setStatus("تم إغلاق صمام Upstream بنجاح.", "#9effc0");
+          if (gameStep === 1) {
+            gameStep = 2;
+            updateObjective();
+          }
+        } else {
+          setStatus("صمام Upstream مغلق بالفعل.", "#cccccc");
+        }
+        return;
+      }
+
+      if (type === "choke") {
+        if (gameStep < 2) {
+          setStatus("أغلق صمام Upstream قبل التعامل مع الـ Choke.", "#ff8080");
+          return;
+        }
+        if (!blockageCleared) {
+          blockageCleared = true;
+          whp = 300;
+          flp = 280;
+          casingPressure = 55;
+          obj.material.color.set(0x43a047); // أخضر / نظيف
+          updateGaugesText();
+          setStatus("تم فك وتنظيف الـ Choke. FLP الآن قريب من WHP.", "#9effc0");
+          if (gameStep === 2) {
+            gameStep = 3;
+            updateObjective();
+          }
+        } else {
+          setStatus("الـ Choke نظيف حالياً، لا يوجد Blockage.", "#cccccc");
+        }
+        return;
+      }
+
+      if (type === "drain") {
+        if (gameStep < 3) {
+          setStatus("نظف الـ Choke ثم خذ Drain Sample.", "#ff8080");
+          return;
+        }
+        if (!sampleTaken) {
+          sampleTaken = true;
+          obj.material.color.set(0x00bcd4);
+
+          // زجاجة عينة بسيطة تحت الصمام
+          const bottleGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.7, 12);
+          const bottleMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            metalness: 0.1,
+            roughness: 0.2,
+            transparent: true,
+            opacity: 0.85
+          });
+          const bottle = new THREE.Mesh(bottleGeo, bottleMat);
+          bottle.position.copy(obj.position);
+          bottle.position.y -= 0.6;
+          scene.add(bottle);
+
+          setStatus("تم أخذ Drain Sample من خط الـ Hook-Up بنجاح.", "#9effc0");
+          if (gameStep === 3) completeTraining();
+        } else {
+          setStatus("العينة مأخوذة بالفعل في هذه الدورة.", "#cccccc");
+        }
+        return;
+      }
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    initScene();
+    animate();
+  </script>
 </body>
 </html>
