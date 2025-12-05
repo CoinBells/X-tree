@@ -38,16 +38,8 @@
     #hud h1 { font-size: 15px; margin: 0 0 3px 0; }
     #hud p  { margin: 3px 0; }
     #hud small { opacity: 0.75; }
-    #objectiveText {
-      margin-top: 4px;
-      font-weight: 600;
-      color: #ffd27f;
-    }
-    #steps {
-      list-style: none;
-      padding: 0;
-      margin: 4px 0 2px 0;
-    }
+    #objectiveText { margin-top: 4px; font-weight: 600; color: #ffd27f; }
+    #steps { list-style: none; padding: 0; margin: 4px 0 2px 0; }
     #steps li { margin: 1px 0; font-size: 12px; }
     .pending::before { content: "○ "; color: #999; }
     .active::before  { content: "● "; color: #ffd27f; }
@@ -162,9 +154,9 @@
 
   <div id="debugMsg"></div>
 
-  <!-- Three.js من jsDelivr -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Three.js (نسخة أقدم تدعم OrbitControls كـ global) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/examples/js/controls/OrbitControls.js"></script>
 
   <script>
     let scene, camera, renderer, controls;
@@ -179,12 +171,12 @@
     let upstreamClosed = false;
     let sampleTaken = false;
 
-    const objectiveText = document.getElementById("objectiveText");
-    const gaugeValues   = document.getElementById("gaugeValues");
-    const gaugeStatus   = document.getElementById("gaugeStatus");
-    const statusBar     = document.getElementById("statusBar");
+    const objectiveText   = document.getElementById("objectiveText");
+    const gaugeValues     = document.getElementById("gaugeValues");
+    const gaugeStatus     = document.getElementById("gaugeStatus");
+    const statusBar       = document.getElementById("statusBar");
     const completeOverlay = document.getElementById("completeOverlay");
-    const debugMsg      = document.getElementById("debugMsg");
+    const debugMsg        = document.getElementById("debugMsg");
 
     const stepEls = {
       1: document.getElementById("step1"),
@@ -193,9 +185,7 @@
       4: document.getElementById("step4")
     };
 
-    function setStepState(step, state) {
-      stepEls[step].className = state;
-    }
+    function setStepState(step, state) { stepEls[step].className = state; }
 
     function updateObjective() {
       switch (gameStep) {
@@ -693,11 +683,10 @@
       }
     }
 
-    // تشغيل بعد تحميل الصفحة + التأكد من توفر THREE
     window.addEventListener("load", function () {
-      if (typeof THREE === "undefined") {
+      if (typeof THREE === "undefined" || typeof THREE.OrbitControls === "undefined") {
         debugMsg.style.display = "block";
-        debugMsg.textContent = "Three.js لم يتم تحميله (تأكد من الاتصال أو من الـ CDN).";
+        debugMsg.textContent = "Three.js أو OrbitControls لم يتم تحميلهما.";
         return;
       }
       try {
