@@ -31,9 +31,9 @@
       display:block;
     }
 
-    /* لوحة البيانات على اليسار (أو يمين في RTL) */
+    /* لوحة البيانات */
     #ui-panel {
-      width:320px;
+      width:340px;
       max-width:40vw;
       background:radial-gradient(circle at top,#020617,#020617 60%,#040b1a 100%);
       border-left:2px solid #1d4ed8;
@@ -187,9 +187,45 @@
       font-size:12px;
     }
 
+    /* عرض البين الواقعي */
+    #bean-card {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+    }
+    #bean-title {
+      font-size:13px;
+      font-weight:600;
+      margin-bottom:2px;
+    }
+    #bean-visual {
+      width:140px;
+      height:140px;
+      border-radius:50%;
+      border:5px solid #9ca3af;
+      box-shadow:0 0 15px rgba(0,0,0,0.9) inset;
+      background-color:#020617;
+      background-position:center;
+      background-size:cover;
+      margin:4px auto;
+    }
+    .bean-dirty {
+      background-image:url("bean_blockage.jpg");
+    }
+    .bean-clean {
+      background-image:url("bean_clean.jpg");
+    }
+    #bean-note {
+      font-size:10px;
+      opacity:0.9;
+      text-align:center;
+      line-height:1.4;
+    }
+
     @media (max-width:900px) {
       #ui-panel {
-        width:260px;
+        width:280px;
         padding:10px 8px;
       }
       #hud { font-size:9px; padding:5px 10px; }
@@ -202,11 +238,12 @@
       <canvas id="game"></canvas>
 
       <div id="hud">
-        تحكم الكمبيوتر: الأسهم / WASD للحركة – E فحص البئر – C تنظيف. موبايل: استخدم الأسهم وأزرار الفحص والتنظيف.
+        كمبيوتر: الأسهم/WASD للحركة – E فحص البئر – C تنظيف. موبايل: استخدم الأسهم وأزرار الفحص والتنظيف.
       </div>
       <div id="hint">
-        أنت عامل في حقل نفطي (منظر علوي). تحرك في الخريطة، اقترب من أي بئر حتى يظهر تلميح الفحص،
-        ثم اضغط <b>E</b> أو زر <b>فحص</b> لقراءة WHP / FLP وفتح ADJ BEAN وتنظيف الـ blockage.
+        تحرك في الخريطة، اقترب من أي بئر حتى يظهر تلميح الفحص،
+        ثم اضغط <b>E</b> أو زر <b>فحص</b> لقراءة WHP / FLP وفتح ADJ BEAN.
+        عند الفتح ستظهر صورة البين من الداخل كما في الواقع.
       </div>
 
       <div id="touch-controls">
@@ -251,13 +288,22 @@
         <button id="btn-clean" class="btn disabled">تنظيف الـ blockage من ADJ BEAN</button>
       </div>
 
+      <div class="card" id="bean-card">
+        <div id="bean-title">منظر البين من الداخل</div>
+        <div id="bean-visual"></div>
+        <div id="bean-note">
+          عند فتح ADJ BEAN يعرض هذا الشكل الداخلي للـ bean.<br>
+          إذا كان فيه ترسبات وسوائل يكون Blockage، وبعد التنظيف يظهر المسار نظيف مثل الواقع.
+        </div>
+      </div>
+
       <div class="card">
         <h3>Training Objectives</h3>
         <ul style="padding-right:18px; line-height:1.4;">
           <li>التحرك في الحقل والوصول إلى عدة آبار.</li>
           <li>قراءة WHP / FLP لكل بئر وتحديد وجود Blockage.</li>
-          <li>فتح ADJ BEAN للبئر الذي فيه Blockage.</li>
-          <li>تنظيف الـ blockage وملاحظة تغيّر القراءات إلى حالة طبيعية.</li>
+          <li>فتح ADJ BEAN للبئر الذي فيه Blockage ورؤية البين من الداخل.</li>
+          <li>تنظيف الـ blockage وملاحظة تغيّر قراءات الضغط وشكل البين إلى حالة نظيفة.</li>
         </ul>
       </div>
 
@@ -269,7 +315,6 @@
   </div>
 
   <script>
-    // إعداد الكانفس
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
@@ -280,13 +325,8 @@
     window.addEventListener("resize", resize);
     resize();
 
-    // عالم الحقل
-    const world = {
-      width: 2200,
-      height: 1400
-    };
+    const world = { width: 2200, height: 1400 };
 
-    // العامل (Top-Down)
     const player = {
       x: 1100,
       y: 700,
@@ -294,7 +334,6 @@
       speed: 2.6
     };
 
-    // آبار
     const wells = [
       { id:"AH-0117", x:900,  y:620, blockage:true,  cleaned:false },
       { id:"AH-0216", x:1300, y:540, blockage:false, cleaned:false },
@@ -324,7 +363,6 @@
       if (e.key === "ArrowRight"|| e.key === "d" || e.key === "D") keys.right = false;
     });
 
-    // ربط أزرار لمس مع نفس المفاتيح
     function bindTouch(btnId, keyName) {
       const btn = document.getElementById(btnId);
       if (!btn) return;
@@ -360,6 +398,7 @@
     const btnOpen    = document.getElementById("btn-open");
     const btnClean   = document.getElementById("btn-clean");
     const logEl      = document.getElementById("log");
+    const beanVisual = document.getElementById("bean-visual");
 
     let currentWell = null;
 
@@ -387,6 +426,23 @@
       }
     }
 
+    function updateBeanVisual(well) {
+      beanVisual.className = "bean-clean bean-dummy"; // reset ثم نعدل
+      beanVisual.className = "bean-clean"; // نحتاج override، لكن سنعدل حسب الحالة
+
+      if (!well) {
+        beanVisual.className = "";
+        beanVisual.id = "bean-visual"; // إعادة الـ id
+        document.getElementById("bean-visual").style.backgroundImage = "none";
+        return;
+      }
+
+      const el = document.getElementById("bean-visual");
+      el.className = ""; // مسح الكلاسات السابقة
+      el.id = "bean-visual";
+      el.classList.add(well.blockage && !well.cleaned ? "bean-dirty" : "bean-clean");
+    }
+
     function updateUIForWell(well) {
       if (!well) {
         wellNameEl.textContent = "لم يتم اختيار بئر";
@@ -397,6 +453,7 @@
         stateTag.textContent = "Normal";
         stateTag.className = "tag tag-ok";
         btnClean.classList.add("disabled");
+        updateBeanVisual(null);
         return;
       }
 
@@ -415,6 +472,7 @@
         stateTag.className = "tag tag-ok";
         btnClean.classList.add("disabled");
       }
+      updateBeanVisual(well);
     }
 
     function getNearestWell() {
@@ -440,7 +498,7 @@
         return;
       }
       currentWell = w;
-      log("فحص البئر " + w.id + " ...");
+      log("فحص البئر " + w.id + " وفتح ADJ BEAN (عرض البين).");
       updateUIForWell(w);
     }
 
@@ -448,7 +506,7 @@
       if (!currentWell) return;
       if (!currentWell.blockage || currentWell.cleaned) return;
       currentWell.cleaned = true;
-      log("تم تنظيف الـ blockage من ADJ BEAN للبئر " + currentWell.id + ".");
+      log("تم تنظيف الـ blockage من ADJ BEAN للبئر " + currentWell.id + " – البين أصبح نظيف.");
       updateUIForWell(currentWell);
     }
 
@@ -465,20 +523,20 @@
         stateTag.textContent = "Blockage";
         stateTag.className = "tag tag-bad";
         btnClean.classList.remove("disabled");
-        log("قراءة WHP/FLP للبئر " + currentWell.id + " تشير إلى Blockage محتمل.");
+        log("قراءة WHP/FLP للبئر " + currentWell.id + " تشير إلى Blockage – انظر للبين على اليمين.");
       } else {
         stateTag.textContent = "Normal";
         stateTag.className = "tag tag-ok";
         btnClean.classList.add("disabled");
-        log("قراءة WHP/FLP للبئر " + currentWell.id + " طبيعية.");
+        log("قراءة WHP/FLP للبئر " + currentWell.id + " طبيعية – البين نظيف.");
       }
+      updateBeanVisual(currentWell);
     });
 
     btnClean.addEventListener("click", cleanCurrent);
 
-    log("تحرك في الخريطة، اقترب من بئر حتى ترى التلميح، ثم افحص ونظف.");
+    log("تحرك في الخريطة، اقترب من بئر، افحصه، وراقب شكل البين (blockage / نظيف) في اللوحة الجانبية.");
 
-    // تحديث الحركة والكاميرا
     function update() {
       let dx = 0, dy = 0;
       if (keys.up) dy -= 1;
@@ -494,18 +552,15 @@
         player.y += dy * player.speed;
       }
 
-      // حدود العالم
       player.x = Math.max(player.radius, Math.min(world.width - player.radius, player.x));
       player.y = Math.max(player.radius, Math.min(world.height - player.radius, player.y));
 
-      // الكاميرا تتبع اللاعب
       cameraX = player.x - canvas.width/2;
       cameraY = player.y - canvas.height/2;
       cameraX = Math.max(0, Math.min(world.width - canvas.width, cameraX));
       cameraY = Math.max(0, Math.min(world.height - canvas.height, cameraY));
     }
 
-    // رسم الخلفية (صحراوية مع بعض التفاصيل)
     function drawBackground() {
       const g = ctx.createLinearGradient(0,0,0,canvas.height);
       g.addColorStop(0,   "#7cc3ff");
@@ -515,11 +570,9 @@
       ctx.fillStyle = g;
       ctx.fillRect(0,0,canvas.width,canvas.height);
 
-      // أسلاك سياج بسيطة
       ctx.strokeStyle = "rgba(15,23,42,0.3)";
       ctx.lineWidth = 1;
       for (let x=-cameraX % 120; x<canvas.width; x+=120) {
-        const worldX = x + cameraX;
         const y1 = world.height*0.3 - cameraY;
         const y2 = y1 + 16;
         ctx.beginPath();
@@ -528,7 +581,6 @@
         ctx.stroke();
       }
 
-      // رولات خطوط Flowline (زخرفة بسيطة)
       ctx.strokeStyle = "rgba(30,64,175,0.35)";
       ctx.lineWidth = 3;
       wells.forEach(w => {
@@ -545,13 +597,11 @@
       const sx = player.x - cameraX;
       const sy = player.y - cameraY;
 
-      // ظل
       ctx.fillStyle = "rgba(0,0,0,0.28)";
       ctx.beginPath();
       ctx.ellipse(sx, sy+10, player.radius*0.9, player.radius*0.5, 0, 0, Math.PI*2);
       ctx.fill();
 
-      // جسم
       ctx.fillStyle = "#facc15";
       ctx.beginPath();
       ctx.arc(sx, sy, player.radius, 0, Math.PI*2);
@@ -560,7 +610,6 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // خوذة
       ctx.fillStyle = "#fb923c";
       ctx.beginPath();
       ctx.arc(sx, sy-4, player.radius*0.8, Math.PI, 0);
@@ -577,29 +626,24 @@
         if (sx < -60 || sx > canvas.width+60 ||
             sy < -60 || sy > canvas.height+60) return;
 
-        // قاعدة
         ctx.fillStyle = "#374151";
         ctx.beginPath();
         ctx.arc(sx, sy, 18, 0, Math.PI*2);
         ctx.fill();
 
-        // X-Tree مبسط
         ctx.fillStyle = "#1d4ed8";
-        ctx.fillRect(sx-5, sy-32, 10, 26); // vertical
-        ctx.fillRect(sx-18, sy-20, 36, 8); // horizontal
+        ctx.fillRect(sx-5, sy-32, 10, 26);
+        ctx.fillRect(sx-18, sy-20, 36, 8);
 
-        // ADJ BEAN / choke
         ctx.fillStyle = (w.blockage && !w.cleaned) ? "#f97373" : "#4ade80";
         ctx.fillRect(sx+20, sy-24, 16, 16);
 
-        // إطار
         ctx.strokeStyle = "#eff6ff";
         ctx.lineWidth = 1.3;
         ctx.beginPath();
         ctx.arc(sx, sy, 22, 0, Math.PI*2);
         ctx.stroke();
 
-        // اسم البئر فوقه
         ctx.fillStyle = "rgba(15,23,42,0.9)";
         ctx.beginPath();
         ctx.roundRect(sx-34, sy-52, 68, 18, 9);
