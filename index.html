@@ -2,13 +2,13 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <title>Roblox Style Oilfield Training</title>
+  <title>Oilfield Training – Switch Style</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{
-      background:#020617;
+      background:#0f172a;
       font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:#f9fafb;
+      color:#0f172a;
       overflow:hidden;
       direction:rtl;
     }
@@ -20,45 +20,46 @@
     #game-wrapper{
       flex:1 1 auto;
       position:relative;
-      background:#020617;
+      background:radial-gradient(circle at top,#60a5fa,#0f172a 55%);
     }
-    /* Three.js canvas يأخذ كل المساحة */
     #three-container{
       position:absolute;
       inset:0;
     }
-
-    /* HUD */
+    /* HUD أعلى الشاشة */
     #hud{
       position:absolute;
-      top:8px;
+      top:10px;
       left:50%;
       transform:translateX(-50%);
-      background:rgba(15,23,42,.92);
+      background:rgba(15,23,42,0.92);
+      color:#e5e7eb;
       border-radius:999px;
       padding:6px 14px;
       font-size:11px;
-      border:1px solid rgba(148,163,184,.5);
+      border:1px solid rgba(148,163,184,.45);
       white-space:nowrap;
       z-index:5;
+      box-shadow:0 8px 18px rgba(0,0,0,.35);
     }
     #hint{
       position:absolute;
-      bottom:8px;
-      right:8px;
-      background:rgba(15,23,42,.92);
-      border-radius:12px;
-      padding:6px 10px;
+      bottom:10px;
+      right:10px;
+      background:rgba(15,23,42,0.92);
+      color:#e5e7eb;
+      border-radius:14px;
+      padding:8px 12px;
       font-size:11px;
-      border:1px solid rgba(148,163,184,.5);
+      border:1px solid rgba(148,163,184,.45);
       max-width:260px;
       z-index:5;
+      box-shadow:0 8px 18px rgba(0,0,0,.35);
     }
-
-    /* أزرار لمس (ستايل روبلوكس بسيط) */
+    /* أزرار لمس – ستايل نينتندو ناعم */
     #touch-controls{
       position:absolute;
-      bottom:14px;
+      bottom:16px;
       left:50%;
       transform:translateX(-50%);
       display:flex;
@@ -66,65 +67,68 @@
       align-items:center;
       gap:6px;
       z-index:6;
-      pointer-events:auto;
     }
-    .tc-row{display:flex;gap:6px}
+    .tc-row{display:flex;gap:8px}
     .tc-btn{
-      width:52px;
-      height:52px;
-      border-radius:12px;
-      border:2px solid #111827;
-      background:linear-gradient(145deg,#111827,#020617);
+      width:54px;
+      height:54px;
+      border-radius:18px;
+      border:none;
+      background:linear-gradient(145deg,#0f172a,#1d293b);
       color:#e5e7eb;
       font-size:22px;
-      box-shadow:0 4px 10px rgba(0,0,0,.9);
+      box-shadow:0 8px 16px rgba(15,23,42,.7);
       touch-action:none;
       cursor:pointer;
     }
     .tc-btn:active{
-      background:linear-gradient(145deg,#1d4ed8,#020617);
+      transform:translateY(1px) scale(.97);
+      background:linear-gradient(145deg,#2563eb,#0f172a);
     }
     .tc-btn-small{
-      width:90px;
+      width:96px;
       font-size:13px;
     }
 
-    /* لوحة جانبية – بيانات البئر + bean */
+    /* لوحة جانبية – ألوان ناعمة */
     #ui-panel{
       width:340px;
       max-width:40vw;
-      background:radial-gradient(circle at top,#020617,#020617 60%,#040b1a 100%);
-      border-left:2px solid #1d4ed8;
+      background:linear-gradient(180deg,#e0f2fe,#eff6ff);
+      border-left:3px solid #60a5fa;
       display:flex;
       flex-direction:column;
       padding:14px 12px;
       gap:10px;
+      box-shadow:-10px 0 25px rgba(15,23,42,.45);
     }
     .card{
-      background:rgba(15,23,42,.95);
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.4);
-      padding:8px 10px;
+      background:#f9fafb;
+      border-radius:18px;
+      border:1px solid #cbd5f5;
+      padding:10px 12px;
       font-size:12px;
+      box-shadow:0 6px 16px rgba(148,163,184,.25);
     }
-    .card h3{font-size:13px;margin-bottom:6px}
+    .card h3{font-size:13px;margin-bottom:6px;color:#0f172a}
     .grid2{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:6px;
+      gap:8px;
     }
     .stat-box{
-      background:#020617;
-      border-radius:10px;
-      border:1px solid #1f2937;
-      padding:6px;
+      background:#eef2ff;
+      border-radius:12px;
+      border:1px solid #c7d2fe;
+      padding:6px 8px;
     }
-    .stat-label{font-size:11px;opacity:.8}
+    .stat-label{font-size:11px;opacity:.85;color:#1e293b}
     .stat-value{
       font-size:16px;
       font-weight:700;
       margin-top:2px;
-      text-shadow:0 0 6px rgba(59,130,246,.9);
+      color:#111827;
+      text-shadow:0 0 6px rgba(129,140,248,.9);
     }
     .tag{
       display:inline-block;
@@ -133,22 +137,47 @@
       border-radius:999px;
       margin-top:4px;
     }
-    .tag-ok{background:rgba(22,163,74,.18);color:#bbf7d0;border:1px solid #22c55e}
-    .tag-bad{background:rgba(248,113,113,.18);color:#fecaca;border:1px solid #f87171}
-    #well-name{font-weight:600;font-size:14px;margin-bottom:4px}
+    .tag-ok{
+      background:#dcfce7;
+      color:#166534;
+      border:1px solid #22c55e;
+    }
+    .tag-bad{
+      background:#fee2e2;
+      color:#b91c1c;
+      border:1px solid #f97373;
+    }
+    #well-name{
+      font-weight:700;
+      font-size:14px;
+      margin-bottom:4px;
+      color:#111827;
+    }
     .btn{
       border-radius:999px;
       border:none;
-      padding:7px 10px;
+      padding:8px 10px;
       font-size:12px;
       font-weight:600;
       cursor:pointer;
-      margin-top:4px;
+      margin-top:6px;
       width:100%;
+      box-shadow:0 6px 14px rgba(148,163,184,.5);
     }
-    #btn-open{background:linear-gradient(90deg,#38bdf8,#6366f1);color:#fff}
-    #btn-clean{background:linear-gradient(90deg,#22c55e,#a3e635);color:#052e16}
-    #btn-clean.disabled{filter:grayscale(.9);opacity:.6;cursor:default}
+    #btn-open{
+      background:linear-gradient(90deg,#38bdf8,#6366f1);
+      color:#f9fafb;
+    }
+    #btn-clean{
+      background:linear-gradient(90deg,#22c55e,#a3e635);
+      color:#052e16;
+    }
+    #btn-clean.disabled{
+      filter:grayscale(.9);
+      opacity:.55;
+      cursor:default;
+      box-shadow:none;
+    }
 
     /* bean الواقعي */
     #bean-card{
@@ -157,28 +186,39 @@
       align-items:center;
       gap:6px;
     }
-    #bean-title{font-size:13px;font-weight:600;margin-bottom:2px}
+    #bean-title{
+      font-size:13px;
+      font-weight:600;
+      margin-bottom:2px;
+      color:#111827;
+    }
     #bean-visual{
-      width:140px;
-      height:140px;
+      width:150px;
+      height:150px;
       border-radius:50%;
-      border:5px solid #9ca3af;
-      box-shadow:0 0 15px rgba(0,0,0,.9) inset;
+      border:6px solid #94a3b8;
+      box-shadow:0 0 18px rgba(15,23,42,.35) inset;
       background-color:#020617;
       background-position:center;
       background-size:cover;
-      margin:4px auto;
+      margin:4px auto 2px;
     }
     .bean-dirty{background-image:url("bean_blockage.jpg")}
     .bean-clean{background-image:url("bean_clean.jpg")}
     #bean-note{
       font-size:10px;
-      opacity:.9;
+      opacity:.95;
       text-align:center;
-      line-height:1.4;
+      line-height:1.5;
+      color:#1f2937;
     }
 
-    #log{font-size:11px;max-height:160px;overflow-y:auto}
+    #log{
+      font-size:11px;
+      max-height:160px;
+      overflow-y:auto;
+      color:#111827;
+    }
     #log p{margin-bottom:3px}
 
     @media(max-width:900px){
@@ -196,8 +236,9 @@
         كمبيوتر: W/S للأمام والخلف، A/D للّف – E فحص، C تنظيف. موبايل: الأسهم + أزرار الفحص والتنظيف.
       </div>
       <div id="hint">
-        عالم 3D بأسلوب Roblox. تحرك في الصحراء، اقترب من بئر، ثم اضغط <b>E</b> أو زر <b>فحص</b>
-        لقراءة WHP/FLP وفتح ADJ BEAN. ستشاهد شكل الـ bean الحقيقي (blockage / clean) في اللوحة الجانبية.
+        عالم 3D ناعم بأسلوب Pokémon على السويتش. تحرك في الصحراء، اقترب من بئر،
+        ثم اضغط <b>E</b> أو زر <b>فحص</b> لقراءة WHP/FLP وفتح ADJ BEAN ورؤية الـ bean الحقيقي
+        (blockage / clean) في اللوحة الجانبية.
       </div>
 
       <div id="touch-controls">
@@ -246,15 +287,15 @@
         <div id="bean-title">منظر البين من الداخل</div>
         <div id="bean-visual"></div>
         <div id="bean-note">
-          عند فتح ADJ BEAN يتم عرض صورة للـ bean من الداخل.<br>
-          إذا كان فيه ترسبات → Blockage. بعد التنظيف يظهر نظيف مثل الصورة الواقعية.
+          عند فتح ADJ BEAN يتم عرض صورة من داخل الـ bean.<br>
+          إذا كان فيه ترسبات → Blockage مثل الصورة الحقيقية، وبعد التنظيف يظهر نظيف.
         </div>
       </div>
 
       <div class="card">
         <h3>Training Objectives</h3>
-        <ul style="padding-right:18px;line-height:1.4;">
-          <li>التحرك في حقل 3D بأسلوب Roblox والوصول لعدة آبار.</li>
+        <ul style="padding-right:18px;line-height:1.5;">
+          <li>استكشاف حقل 3D بأسلوب Pokémon والوصول لعدة آبار.</li>
           <li>قراءة WHP / FLP وتحديد وجود Blockage.</li>
           <li>رؤية البين الواقعي (مسدود / نظيف) عند فتح ADJ BEAN.</li>
           <li>تنظيف الـ blockage وملاحظة تغيّر القراءات وشكل البين.</li>
@@ -271,24 +312,24 @@
   <!-- Three.js -->
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
   <script>
-    // ====== Three.js Setup (Roblox-style block world) ======
+    // ===== إعداد Three.js بأسلوب Pokémon (ألوان ناعمة وكاميرا مائلة) =====
     const container = document.getElementById("three-container");
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87c8ff);
+    scene.fog = new THREE.Fog(0x90c9ff, 200, 900);
 
     const camera = new THREE.PerspectiveCamera(
-      60,
+      55,
       container.clientWidth / container.clientHeight,
       0.1,
       2000
     );
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias:true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    function onResize() {
+    function onResize(){
       const w = container.clientWidth;
       const h = container.clientHeight;
       camera.aspect = w / h;
@@ -297,98 +338,112 @@
     }
     window.addEventListener("resize", onResize);
 
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xe0bb7f, 0.9);
-    scene.add(hemiLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    dirLight.position.set(80, 120, -40);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
+    // إضاءة ناعمة
+    const hemi = new THREE.HemisphereLight(0xffffff, 0xf0c27b, 0.9);
+    scene.add(hemi);
+    const sun = new THREE.DirectionalLight(0xfff4e5, 0.9);
+    sun.position.set(120, 180, -80);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    scene.add(sun);
 
-    // أرضية بلوكية
-    const groundGeo = new THREE.PlaneGeometry(4000, 4000);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0xf0c27b });
+    // أرضية رملية ناعمة
+    const groundGeo = new THREE.PlaneGeometry(4000, 4000, 60, 60);
+    const groundMat = new THREE.MeshLambertMaterial({ color:0xf6d6a9 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
+    ground.rotation.x = -Math.PI/2;
     ground.receiveShadow = true;
+
+    // تموّجات بسيطة للرمل
+    for(let i=0;i<ground.geometry.attributes.position.count;i++){
+      const y = (Math.sin(i*0.13)+Math.cos(i*0.07))*0.6;
+      ground.geometry.attributes.position.setY(i, y);
+    }
+    ground.geometry.computeVertexNormals();
     scene.add(ground);
 
-    // بلاطات مربعة لإحساس Roblox
-    const tileGeo = new THREE.PlaneGeometry(40, 40);
-    const tileMat = new THREE.MeshStandardMaterial({ color: 0xeab676 });
-    for (let x = -400; x <= 400; x += 40) {
-      for (let z = -400; z <= 400; z += 40) {
-        const tile = new THREE.Mesh(tileGeo, tileMat);
-        tile.rotation.x = -Math.PI / 2;
-        tile.position.set(x, 0.01, z);
-        tile.receiveShadow = true;
-        scene.add(tile);
-      }
+    // بعض الأعشاب/الشجيرات
+    function addBush(x,z){
+      const geo = new THREE.SphereGeometry(4,12,12);
+      const mat = new THREE.MeshLambertMaterial({ color:0x4ade80 });
+      const m = new THREE.Mesh(geo, mat);
+      m.castShadow = true;
+      m.position.set(x,2.5,z);
+      scene.add(m);
+    }
+    for(let i=0;i<18;i++){
+      const x = (Math.random()-0.5)*600;
+      const z = (Math.random()-0.5)*600;
+      addBush(x,z);
     }
 
-    // عامل Roblox-style (body + head + arms)
-    const playerGroup = new THREE.Group();
+    // شخصية العامل – تشيبي (رأس كبير, جسم قصير)
+    const worker = new THREE.Group();
 
-    const bodyGeo = new THREE.BoxGeometry(8, 10, 4);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffd54f });
+    const bodyGeo = new THREE.CapsuleGeometry(4,6,12,18);
+    const bodyMat = new THREE.MeshLambertMaterial({ color:0xffd54f });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.castShadow = true;
-    body.position.y = 8;
-    playerGroup.add(body);
+    body.position.y = 6;
+    worker.add(body);
 
-    const headGeo = new THREE.BoxGeometry(6, 6, 6);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xffe0b2 });
+    const headGeo = new THREE.SphereGeometry(4.3,24,24);
+    const headMat = new THREE.MeshLambertMaterial({ color:0xffe0b2 });
     const head = new THREE.Mesh(headGeo, headMat);
     head.castShadow = true;
-    head.position.y = 14;
-    playerGroup.add(head);
+    head.position.y = 11.8;
+    worker.add(head);
 
-    const helmetGeo = new THREE.BoxGeometry(7, 2, 7);
-    const helmetMat = new THREE.MeshStandardMaterial({ color: 0xfb923c });
+    const helmetGeo = new THREE.SphereGeometry(4.8,24,24,0,Math.PI*2,0,Math.PI/1.6);
+    const helmetMat = new THREE.MeshLambertMaterial({ color:0xfb923c });
     const helmet = new THREE.Mesh(helmetGeo, helmetMat);
     helmet.castShadow = true;
-    helmet.position.y = 17;
-    playerGroup.add(helmet);
+    helmet.position.y = 12.1;
+    worker.add(helmet);
 
-    const legGeo = new THREE.BoxGeometry(3, 8, 3);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8 });
+    const legGeo = new THREE.CylinderGeometry(1.2,1.5,4,14);
+    const legMat = new THREE.MeshLambertMaterial({ color:0x1d4ed8 });
     const legL = new THREE.Mesh(legGeo, legMat);
-    legL.position.set(-2, 4, 0);
     const legR = legL.clone();
-    legR.position.x = 2;
-    playerGroup.add(legL, legR);
+    legL.position.set(-1.3,3.3,0);
+    legR.position.set( 1.3,3.3,0);
+    legL.castShadow = legR.castShadow = true;
+    worker.add(legL, legR);
 
-    playerGroup.position.set(60, 0, -40);
-    scene.add(playerGroup);
+    worker.position.set(70,0,-40);
+    scene.add(worker);
 
-    // آبار كبلوكات ثلاثية الأبعاد
-    function createRobloxWell(colorBase) {
+    // آبار بشكل ناعم (X-tree مبسط + ذراع choke)
+    function createWell(){
       const g = new THREE.Group();
 
-      const baseGeo = new THREE.BoxGeometry(10, 2, 10);
-      const baseMat = new THREE.MeshStandardMaterial({ color: 0x4b5563 });
+      const baseGeo = new THREE.CylinderGeometry(4,4,2,20);
+      const baseMat = new THREE.MeshLambertMaterial({ color:0x4b5563 });
       const base = new THREE.Mesh(baseGeo, baseMat);
       base.position.y = 1;
       base.castShadow = true;
       base.receiveShadow = true;
       g.add(base);
 
-      const stemGeo = new THREE.BoxGeometry(3, 12, 3);
-      const stemMat = new THREE.MeshStandardMaterial({ color: colorBase });
+      const stemGeo = new THREE.CylinderGeometry(1.6,1.6,10,20);
+      const stemMat = new THREE.MeshLambertMaterial({ color:0x1d4ed8 });
       const stem = new THREE.Mesh(stemGeo, stemMat);
       stem.position.y = 7;
       stem.castShadow = true;
       g.add(stem);
 
-      const armGeo = new THREE.BoxGeometry(10, 2, 2);
+      const armGeo = new THREE.CylinderGeometry(0.8,0.8,7,18);
       const arm = new THREE.Mesh(armGeo, stemMat);
-      arm.position.set(6.5, 9, 0);
+      arm.rotation.z = Math.PI/2;
+      arm.position.set(4,8.6,0);
       arm.castShadow = true;
       g.add(arm);
 
-      const chokeGeo = new THREE.BoxGeometry(3, 3, 3);
-      const chokeMat = new THREE.MeshStandardMaterial({ color: 0x22c55e });
+      const chokeGeo = new THREE.CapsuleGeometry(1,1.5,8,16);
+      const chokeMat = new THREE.MeshLambertMaterial({ color:0x22c55e });
       const choke = new THREE.Mesh(chokeGeo, chokeMat);
-      choke.position.set(11, 9, 0);
+      choke.position.set(8,8.6,0);
+      choke.rotation.z = Math.PI/2;
       choke.castShadow = true;
       choke.name = "choke";
       g.add(choke);
@@ -397,52 +452,52 @@
     }
 
     const wellsData = [
-      { id: "AH-0117", pos: new THREE.Vector3(80, 0, -40), blockage: true, cleaned: false },
-      { id: "AH-0216", pos: new THREE.Vector3(-60, 0, -50), blockage: false, cleaned: false },
-      { id: "AH-0274", pos: new THREE.Vector3(140, 0, 60), blockage: true, cleaned: false },
-      { id: "AH-0287", pos: new THREE.Vector3(-140, 0, 120), blockage: true, cleaned: false },
-      { id: "MG-0345", pos: new THREE.Vector3(40, 0, 150), blockage: false, cleaned: false }
+      { id:"AH-0117", pos:new THREE.Vector3(90,0,-40), blockage:true,  cleaned:false },
+      { id:"AH-0216", pos:new THREE.Vector3(-70,0,-60), blockage:false, cleaned:false },
+      { id:"AH-0274", pos:new THREE.Vector3(150,0,70), blockage:true,  cleaned:false },
+      { id:"AH-0287", pos:new THREE.Vector3(-140,0,130), blockage:true, cleaned:false },
+      { id:"MG-0345", pos:new THREE.Vector3(40,0,160),  blockage:false, cleaned:false }
     ];
 
-    wellsData.forEach(w => {
-      const m = createRobloxWell(0x1d4ed8);
-      m.position.copy(w.pos);
-      m.userData.id = w.id;
-      m.userData.blockage = w.blockage;
-      m.userData.cleaned = w.cleaned;
-      scene.add(m);
-      w.mesh = m;
+    wellsData.forEach(w=>{
+      const mesh = createWell();
+      mesh.position.copy(w.pos);
+      mesh.userData.id = w.id;
+      mesh.userData.blockage = w.blockage;
+      mesh.userData.cleaned  = w.cleaned;
+      scene.add(mesh);
+      w.mesh = mesh;
     });
 
-    // حركة اللاعب (ستايل روبلوكس بسيط)
+    // حركة اللاعب (مشابه لألعاب بوكيمون – كاميرا مائلة خلفه)
     let yaw = 0;
     const keys = { forward:false, backward:false, left:false, right:false };
 
-    window.addEventListener("keydown", e => {
-      if (e.code === "KeyW" || e.code === "ArrowUp") keys.forward = true;
-      if (e.code === "KeyS" || e.code === "ArrowDown") keys.backward = true;
-      if (e.code === "KeyA" || e.code === "ArrowLeft") keys.left = true;
-      if (e.code === "KeyD" || e.code === "ArrowRight") keys.right = true;
-      if (e.code === "KeyE") inspectNearest();
-      if (e.code === "KeyC") cleanCurrent();
+    window.addEventListener("keydown",e=>{
+      if(e.code==="KeyW"||e.code==="ArrowUp")    keys.forward = true;
+      if(e.code==="KeyS"||e.code==="ArrowDown")  keys.backward = true;
+      if(e.code==="KeyA"||e.code==="ArrowLeft")  keys.left = true;
+      if(e.code==="KeyD"||e.code==="ArrowRight") keys.right = true;
+      if(e.code==="KeyE") inspectNearest();
+      if(e.code==="KeyC") cleanCurrent();
     });
-    window.addEventListener("keyup", e => {
-      if (e.code === "KeyW" || e.code === "ArrowUp") keys.forward = false;
-      if (e.code === "KeyS" || e.code === "ArrowDown") keys.backward = false;
-      if (e.code === "KeyA" || e.code === "ArrowLeft") keys.left = false;
-      if (e.code === "KeyD" || e.code === "ArrowRight") keys.right = false;
+    window.addEventListener("keyup",e=>{
+      if(e.code==="KeyW"||e.code==="ArrowUp")    keys.forward = false;
+      if(e.code==="KeyS"||e.code==="ArrowDown")  keys.backward = false;
+      if(e.code==="KeyA"||e.code==="ArrowLeft")  keys.left = false;
+      if(e.code==="KeyD"||e.code==="ArrowRight") keys.right = false;
     });
 
-    function bindTouch(btnId, keyName){
-      const btn = document.getElementById(btnId);
-      if (!btn) return;
-      const start = e => { e.preventDefault(); keys[keyName] = true; };
-      const end   = e => { e.preventDefault(); keys[keyName] = false; };
-      btn.addEventListener("touchstart", start,{passive:false});
-      btn.addEventListener("touchend",   end,  {passive:false});
-      btn.addEventListener("touchcancel",end,  {passive:false});
-      btn.addEventListener("mousedown",  start);
-      window.addEventListener("mouseup", end);
+    function bindTouch(btnId,keyName){
+      const btn=document.getElementById(btnId);
+      if(!btn) return;
+      const start=e=>{e.preventDefault();keys[keyName]=true;};
+      const end  =e=>{e.preventDefault();keys[keyName]=false;};
+      btn.addEventListener("touchstart",start,{passive:false});
+      btn.addEventListener("touchend",end,{passive:false});
+      btn.addEventListener("touchcancel",end,{passive:false});
+      btn.addEventListener("mousedown",start);
+      window.addEventListener("mouseup",end);
     }
     bindTouch("tc-up","forward");
     bindTouch("tc-down","backward");
@@ -450,34 +505,34 @@
     bindTouch("tc-right","right");
 
     document.getElementById("tc-inspect")
-      .addEventListener("click", () => inspectNearest());
+      .addEventListener("click",()=>inspectNearest());
     document.getElementById("tc-inspect")
-      .addEventListener("touchstart", e => { e.preventDefault(); inspectNearest(); });
+      .addEventListener("touchstart",e=>{e.preventDefault();inspectNearest();});
     document.getElementById("tc-clean")
-      .addEventListener("click", () => cleanCurrent());
+      .addEventListener("click",()=>cleanCurrent());
     document.getElementById("tc-clean")
-      .addEventListener("touchstart", e => { e.preventDefault(); cleanCurrent(); });
+      .addEventListener("touchstart",e=>{e.preventDefault();cleanCurrent();});
 
     function updatePlayer(delta){
-      const turnSpeed = 1.8 * delta;
-      const moveSpeed = 40 * delta;
+      const turnSpeed = 2.0 * delta;
+      const moveSpeed = 32  * delta;
 
-      if (keys.left)  yaw += turnSpeed;
-      if (keys.right) yaw -= turnSpeed;
+      if(keys.left)  yaw += turnSpeed;
+      if(keys.right) yaw -= turnSpeed;
 
-      const dir = new THREE.Vector3(Math.sin(yaw), 0, -Math.cos(yaw));
+      const dir = new THREE.Vector3(Math.sin(yaw),0,-Math.cos(yaw));
 
-      if (keys.forward)  playerGroup.position.addScaledVector(dir, moveSpeed);
-      if (keys.backward) playerGroup.position.addScaledVector(dir, -moveSpeed);
+      if(keys.forward)  worker.position.addScaledVector(dir, moveSpeed);
+      if(keys.backward) worker.position.addScaledVector(dir,-moveSpeed);
 
-      // كاميرا خلف اللاعب
-      const camOffset = new THREE.Vector3(0, 25, 40);
-      camOffset.applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
-      camera.position.copy(playerGroup.position).add(camOffset);
-      camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0,12,0)));
+      // كاميرا مائلة مثل بوكيمون
+      const camOffset = new THREE.Vector3(0,35,60);
+      camOffset.applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
+      camera.position.copy(worker.position).add(camOffset);
+      camera.lookAt(worker.position.clone().add(new THREE.Vector3(0,10,0)));
     }
 
-    // ====== منطق التدريب / اللوحة الجانبية ======
+    // ===== منطق التدريب وواجهة البئر =====
     const wellNameEl = document.getElementById("well-name");
     const whpEl      = document.getElementById("whp-val");
     const flpEl      = document.getElementById("flp-val");
@@ -497,36 +552,36 @@
       logEl.prepend(p);
     }
 
-    function calcPressures(well){
-      if (well.userData.blockage && !well.userData.cleaned){
+    function calcPressures(w){
+      if(w.userData.blockage && !w.userData.cleaned){
         return {
-          whp: 420 + Math.floor(Math.random()*20),
-          flp: 120 + Math.floor(Math.random()*15),
-          bad: true,
+          whp:420+Math.floor(Math.random()*20),
+          flp:120+Math.floor(Math.random()*15),
+          bad:true,
           text:"Blockage محتمل / مؤكد"
         };
-      } else {
+      }else{
         return {
-          whp: 260 + Math.floor(Math.random()*15),
-          flp: 240 + Math.floor(Math.random()*15),
+          whp:260+Math.floor(Math.random()*15),
+          flp:240+Math.floor(Math.random()*15),
           bad:false,
           text:"تدفق طبيعي"
         };
       }
     }
 
-    function updateBeanVisual(well){
+    function updateBeanVisual(w){
       beanVisual.classList.remove("bean-dirty","bean-clean");
-      if (!well) return;
-      if (well.userData.blockage && !well.userData.cleaned){
+      if(!w) return;
+      if(w.userData.blockage && !w.userData.cleaned){
         beanVisual.classList.add("bean-dirty");
-      } else {
+      }else{
         beanVisual.classList.add("bean-clean");
       }
     }
 
-    function updateUIForWell(well){
-      if (!well){
+    function updateUIForWell(w){
+      if(!w){
         wellNameEl.textContent="لم يتم اختيار بئر";
         whpEl.textContent="---";
         flpEl.textContent="---";
@@ -538,13 +593,13 @@
         updateBeanVisual(null);
         return;
       }
-      const p = calcPressures(well);
-      wellNameEl.textContent="بئر "+well.userData.id;
+      const p = calcPressures(w);
+      wellNameEl.textContent="بئر "+w.userData.id;
       whpEl.textContent=p.whp+" psi";
       flpEl.textContent=p.flp+" psi";
       casingEl.textContent="Closed";
       stateEl.textContent=p.text;
-      if (p.bad){
+      if(p.bad){
         stateTag.textContent="Blockage";
         stateTag.className="tag tag-bad";
         btnClean.classList.remove("disabled");
@@ -553,16 +608,16 @@
         stateTag.className="tag tag-ok";
         btnClean.classList.add("disabled");
       }
-      updateBeanVisual(well);
+      updateBeanVisual(w);
     }
 
     function nearestWell(){
       let best=null;
-      let bestDist=30; // متر تقريبي في اللعبة
-      const p=playerGroup.position;
+      let bestDist=30;
+      const pos=worker.position;
       wellsData.forEach(w=>{
-        const d=p.distanceTo(w.mesh.position);
-        if (d<bestDist){
+        const d = pos.distanceTo(w.mesh.position);
+        if(d<bestDist){
           bestDist=d;
           best=w.mesh;
         }
@@ -572,7 +627,7 @@
 
     function inspectNearest(){
       const w = nearestWell();
-      if (!w){
+      if(!w){
         log("لا يوجد بئر قريب للفحص، اقترب أكثر.");
         return;
       }
@@ -582,27 +637,27 @@
     }
 
     function cleanCurrent(){
-      if (!currentWell) return;
-      if (!currentWell.userData.blockage || currentWell.userData.cleaned) return;
+      if(!currentWell) return;
+      if(!currentWell.userData.blockage || currentWell.userData.cleaned) return;
       currentWell.userData.cleaned = true;
       log("تم تنظيف الـ blockage من ADJ BEAN للبئر "+currentWell.userData.id+" – البين أصبح نظيف.");
       updateUIForWell(currentWell);
       const choke = currentWell.getObjectByName("choke");
-      if (choke) choke.material.color.set(0x22c55e);
+      if(choke) choke.material.color.set(0x22c55e);
     }
 
     btnOpen.addEventListener("click",()=>{
-      if (!currentWell){inspectNearest();return;}
+      if(!currentWell){inspectNearest();return;}
       const p = calcPressures(currentWell);
       whpEl.textContent=p.whp+" psi";
       flpEl.textContent=p.flp+" psi";
       stateEl.textContent=p.text;
-      if (p.bad){
+      if(p.bad){
         stateTag.textContent="Blockage";
         stateTag.className="tag tag-bad";
         btnClean.classList.remove("disabled");
-        log("قراءة WHP/FLP للبئر "+currentWell.userData.id+" تشير إلى Blockage – شاهد البين على اليمين.");
-      } else {
+        log("قراءة WHP/FLP للبئر "+currentWell.userData.id+" تشير إلى Blockage – شاهد البين.");
+      }else{
         stateTag.textContent="Normal";
         stateTag.className="tag tag-ok";
         btnClean.classList.add("disabled");
@@ -610,16 +665,11 @@
       }
       updateBeanVisual(currentWell);
     });
+
     btnClean.addEventListener("click",cleanCurrent);
 
-    document.getElementById("tc-inspect")
-      .addEventListener("touchstart",e=>{e.preventDefault();inspectNearest();});
-    document.getElementById("tc-clean")
-      .addEventListener("touchstart",e=>{e.preventDefault();cleanCurrent();});
+    log("تحرك في العالم، اقترب من الآبار، افحص ونظّف الـ blockage، ولاحظ شكل البين والضغوط.");
 
-    log("تحرك في العالم 3D بأسلوب Roblox، اقترب من الآبار، افحص الـ ADJ BEAN ونظّف الـ blockage.");
-
-    // Loop
     let last = performance.now();
     function animate(now){
       const delta = (now-last)/1000;
