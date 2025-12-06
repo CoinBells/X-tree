@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <title>Wellhead Training Game</title>
+  <title>Wellhead Training – Nintendo Style</title>
   <style>
     * {
       box-sizing: border-box;
@@ -11,13 +11,13 @@
     }
 
     body {
-      background: #0b1733;
+      background: #05132c;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #f5f5f5;
+      color: #f9fafb;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       direction: rtl;
     }
 
@@ -27,17 +27,39 @@
       width: 100%;
       max-width: 1100px;
       height: 90vh;
-      max-height: 650px;
+      max-height: 680px;
+      padding: 10px;
     }
 
     #game-area {
-      flex: 2.1;
-      background: linear-gradient(#1b2a43 55%, #b28a52 55%);
-      border-radius: 10px;
-      border: 2px solid #4d6aff;
+      flex: 2;
+      background: linear-gradient(#87c8ff 0%, #cfe9ff 45%, #f7d9a0 45%, #f0c27b 100%);
+      border-radius: 18px;
+      border: 3px solid #1d4ed8;
       position: relative;
       overflow: hidden;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.45);
     }
+
+    #canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .label {
+      position: absolute;
+      font-size: 11px;
+      background: rgba(0,0,0,0.55);
+      padding: 3px 6px;
+      border-radius: 999px;
+      pointer-events: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      white-space: nowrap;
+    }
+    #label-well { bottom: 145px; left: 50%; transform: translateX(-50%); }
+    #label-adj { bottom: 150px; right: 60px; }
+    #label-gauges { top: 18px; left: 12px; }
 
     #ui-panel {
       flex: 1;
@@ -47,10 +69,11 @@
     }
 
     .card {
-      background: #101827;
-      border-radius: 10px;
+      background: linear-gradient(145deg, #020617, #060c1f);
+      border-radius: 16px;
       padding: 10px 12px;
-      border: 1px solid #39425e;
+      border: 2px solid #1f2937;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.6);
     }
 
     .card h2 {
@@ -65,44 +88,44 @@
     }
 
     .gauge {
-      background: #050814;
-      border-radius: 8px;
-      padding: 6px;
-      border: 1px solid #29324b;
+      background: radial-gradient(circle at top, #0b1120, #020617);
+      border-radius: 14px;
+      padding: 6px 8px;
+      border: 1px solid #334155;
       font-size: 12px;
+      box-shadow: inset 0 0 0 1px rgba(15,23,42,0.6);
     }
 
     .gauge-label {
       font-size: 11px;
-      opacity: 0.8;
+      opacity: 0.9;
     }
 
     .gauge-value {
       font-size: 16px;
       font-weight: 700;
       margin-top: 2px;
+      text-shadow: 0 0 4px rgba(59,130,246,0.8);
     }
 
     .status-dot {
       display: inline-block;
-      width: 8px;
-      height: 8px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       margin-left: 4px;
+      box-shadow: 0 0 6px currentColor;
     }
-
     .status-green { background: #22c55e; }
     .status-yellow { background: #eab308; }
     .status-red { background: #ef4444; }
 
     .objectives-list {
       font-size: 12px;
-      line-height: 1.4;
+      line-height: 1.5;
     }
 
-    .objectives-list li {
-      margin-bottom: 3px;
-    }
+    .objectives-list li { margin-bottom: 3px; }
 
     .objective-done {
       text-decoration: line-through;
@@ -111,52 +134,35 @@
 
     #log {
       font-size: 11px;
-      max-height: 80px;
+      max-height: 90px;
       overflow-y: auto;
       direction: rtl;
     }
 
-    #log p {
-      margin-bottom: 3px;
-    }
+    #log p { margin-bottom: 3px; }
 
     #controls {
       font-size: 11px;
       line-height: 1.5;
-      opacity: 0.9;
+      opacity: 0.95;
     }
 
-    /* Canvas objects (for reference regions) */
-    #canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+    /* Responsive – موبايل */
+    @media (max-width: 900px) {
+      #game-wrapper {
+        flex-direction: column;
+        height: auto;
+        max-height: none;
+      }
 
-    /* Simple labels over canvas */
-    .label {
-      position: absolute;
-      font-size: 10px;
-      background: rgba(0,0,0,0.55);
-      padding: 2px 4px;
-      border-radius: 4px;
-      pointer-events: none;
-    }
+      #game-area {
+        height: 55vh;
+        min-height: 320px;
+      }
 
-    #label-well {
-      bottom: 140px;
-      left: 48%;
-      transform: translateX(-50%);
-    }
-
-    #label-adj {
-      bottom: 145px;
-      right: 90px;
-    }
-
-    #label-gauges {
-      top: 18px;
-      left: 12px;
+      #ui-panel {
+        flex: none;
+      }
     }
   </style>
 </head>
@@ -221,36 +227,38 @@
   </div>
 
   <script>
-    // Canvas setup
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
     function resizeCanvas() {
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
+      const dpr = window.devicePixelRatio || 1;
+      const displayWidth = canvas.clientWidth;
+      const displayHeight = canvas.clientHeight;
+      canvas.width = displayWidth * dpr;
+      canvas.height = displayHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    // Game state
     const keys = { left:false, right:false };
     const worker = {
       x: 80,
-      y: 0, // will be set to ground later
+      y: 0,
       width: 24,
       height: 48,
       speed: 2.4
     };
 
-    const groundY = () => canvas.height - 40;
+    const groundY = () => canvas.clientHeight - 60;
 
     const objects = {
-      gaugesZone: { x: 10, width: 140 },
-      wellhead: { x: canvas.width * 0.48, width: 60 },
-      adjBean: { x: canvas.width - 130, width: 60 }
+      gaugesZone: { x: 10, width: 150 },
+      wellhead: { x: canvas.clientWidth * 0.48, width: 80 },
+      adjBean: { x: canvas.clientWidth - 140, width: 70 }
     };
 
-    let hasBlockage = Math.random() < 0.6; // 60% احتمال وجود blockage
+    let hasBlockage = Math.random() < 0.6;
     let adjBeanOpen = false;
     let blockageCleaned = false;
 
@@ -278,7 +286,6 @@
 
     function updatePressures() {
       if (hasBlockage && !blockageCleaned) {
-        // مثال: blockage -> WHP عالي، FLP منخفض
         whp = 420 + Math.floor(Math.random()*20);
         flp = 120 + Math.floor(Math.random()*15);
         stateEl.textContent = "Blockage محتمل";
@@ -303,7 +310,6 @@
       li.classList.add("objective-done");
     }
 
-    // Input
     window.addEventListener("keydown", (e) => {
       if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
       if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
@@ -322,20 +328,18 @@
     }
 
     function handleInteraction() {
-      // Near gauges
       if (isNear(worker.x, objects.gaugesZone)) {
         updatePressures();
         log(`قراءة العدادات: WHP = ${whp} psi ، FLP = ${flp} psi`);
         setObjectiveDone(obj1);
         if (hasBlockage && !blockageCleaned) {
-          log("الفرق بين WHP و FLP كبير -> احتمال وجود blockage في الـ ADJ BEAN.");
+          log("الفرق بين WHP و FLP كبير → احتمال وجود blockage في الـ ADJ BEAN.");
           setObjectiveDone(obj2);
         } else {
           log("القراءات طبيعية تقريباً.");
         }
       }
 
-      // Near ADJ BEAN
       if (isNear(worker.x, objects.adjBean)) {
         adjBeanOpen = true;
         if (hasBlockage && !blockageCleaned) {
@@ -364,121 +368,200 @@
       }
     }
 
-    // Draw functions
-    function drawGround() {
-      ctx.fillStyle = "#b28a52";
-      ctx.fillRect(0, groundY(), canvas.width, 40);
+    function drawTiles() {
+      const tileSize = 28;
+      const startY = groundY();
+      for (let x = -20; x < canvas.clientWidth + 40; x += tileSize) {
+        const y = startY + ((x / tileSize) % 2 === 0 ? 0 : 6);
+        ctx.fillStyle = "#f2c58b";
+        ctx.fillRect(x, y, tileSize, 40);
+        ctx.strokeStyle = "rgba(0,0,0,0.08)";
+        ctx.strokeRect(x, y, tileSize, 40);
+      }
+    }
+
+    function drawCloud(cx, cy, scale) {
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      ctx.beginPath();
+      ctx.arc(cx, cy, 16*scale, Math.PI*0.5, Math.PI*1.5);
+      ctx.arc(cx+18*scale, cy-14*scale, 18*scale, Math.PI*1.0, Math.PI*2.0);
+      ctx.arc(cx+38*scale, cy, 16*scale, Math.PI*1.5, Math.PI*0.5);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawBackgroundDecor() {
+      drawCloud(70, 60, 0.9);
+      drawCloud(canvas.clientWidth - 120, 50, 1.1);
+      drawCloud(canvas.clientWidth/2, 80, 0.8);
     }
 
     function drawWorker() {
       const x = worker.x;
       const y = groundY() - worker.height;
 
+      // shadow
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(x + worker.width/2, groundY()+8, 16, 4, 0, 0, Math.PI*2);
+      ctx.fill();
+
       // body
-      ctx.fillStyle = "#facc15";
-      ctx.fillRect(x, y + 12, worker.width, worker.height - 12);
+      ctx.fillStyle = "#fed34f";
+      ctx.fillRect(x, y + 14, worker.width, worker.height - 16);
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x+0.5, y+14.5, worker.width-1, worker.height-17);
 
       // helmet
-      ctx.fillStyle = "#f97316";
-      ctx.fillRect(x, y, worker.width, 14);
+      ctx.fillStyle = "#fb923c";
+      ctx.fillRect(x-1, y, worker.width+2, 16);
+      ctx.strokeStyle = "#9a3412";
+      ctx.strokeRect(x-1, y, worker.width+2, 16);
+
+      // face
+      ctx.fillStyle = "#fde68a";
+      ctx.fillRect(x+4, y+10, worker.width-8, 10);
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(x+7, y+13, 2, 2);
+      ctx.fillRect(x+worker.width-9, y+13, 2, 2);
 
       // legs
       ctx.fillStyle = "#0f172a";
-      ctx.fillRect(x + 3, y + worker.height - 12, 6, 12);
-      ctx.fillRect(x + worker.width - 9, y + worker.height - 12, 6, 12);
+      ctx.fillRect(x+4, y+worker.height-12, 6, 12);
+      ctx.fillRect(x+worker.width-10, y+worker.height-12, 6, 12);
     }
 
     function drawWellhead() {
       const centerX = objects.wellhead.x + objects.wellhead.width/2;
-      const baseY = groundY();
-
-      ctx.strokeStyle = "#38bdf8";
-      ctx.lineWidth = 6;
-      ctx.lineCap = "round";
+      const baseY = groundY()-6;
+      const topY = baseY - 150;
 
       // vertical pipe
-      const topY = baseY - 150;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#3b82f6";
+      ctx.lineWidth = 10;
       ctx.beginPath();
       ctx.moveTo(centerX, baseY);
       ctx.lineTo(centerX, topY);
       ctx.stroke();
 
-      // three circular valves
-      const valvePositions = [baseY - 40, baseY - 80, baseY - 120];
-      ctx.fillStyle = "#1d4ed8";
-      ctx.strokeStyle = "#e5e7eb";
-      ctx.lineWidth = 3;
+      // subtle outline
+      ctx.strokeStyle = "rgba(15,23,42,0.8)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(centerX, baseY);
+      ctx.lineTo(centerX, topY);
+      ctx.stroke();
 
+      // valves
+      const valvePositions = [baseY - 40, baseY - 85, baseY - 130];
       valvePositions.forEach((y) => {
+        // body
+        ctx.fillStyle = "#1d4ed8";
         ctx.beginPath();
-        ctx.arc(centerX, y, 16, 0, Math.PI * 2);
+        ctx.roundRect(centerX-18, y-14, 36, 28, 10);
         ctx.fill();
+        ctx.strokeStyle = "#eff6ff";
+        ctx.lineWidth = 2;
         ctx.stroke();
 
         // cross
+        ctx.strokeStyle = "#eff6ff";
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(centerX - 10, y);
-        ctx.lineTo(centerX + 10, y);
-        ctx.moveTo(centerX, y - 10);
-        ctx.lineTo(centerX, y + 10);
+        ctx.moveTo(centerX-10, y);
+        ctx.lineTo(centerX+10, y);
+        ctx.moveTo(centerX, y-10);
+        ctx.lineTo(centerX, y+10);
         ctx.stroke();
       });
 
-      // side wing + choke line (to the right)
+      // side wing pipe
       const wingY = valvePositions[1];
       ctx.strokeStyle = "#38bdf8";
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 9;
       ctx.beginPath();
       ctx.moveTo(centerX, wingY);
-      ctx.lineTo(centerX + 70, wingY);
+      ctx.lineTo(centerX + 80, wingY);
       ctx.stroke();
 
-      // choke / adj bean housing
-      ctx.fillStyle = hasBlockage && !blockageCleaned ? "#b91c1c" : "#16a34a";
-      ctx.fillRect(centerX + 70, wingY - 12, 34, 24);
-
-      // flowline to right
-      ctx.strokeStyle = "#38bdf8";
-      ctx.lineWidth = 6;
+      // adj bean block
+      const blockX = centerX + 80;
+      const blockY = wingY - 14;
+      ctx.fillStyle = hasBlockage && !blockageCleaned ? "#f97373" : "#4ade80";
       ctx.beginPath();
-      ctx.moveTo(centerX + 104, wingY);
-      ctx.lineTo(canvas.width - 10, wingY + 10);
+      ctx.roundRect(blockX, blockY, 40, 28, 8);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(15,23,42,0.9)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // little handle
+      ctx.strokeStyle = "#111827";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(blockX+20, blockY-10);
+      ctx.lineTo(blockX+20, blockY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(blockX+20, blockY-12, 4, 0, Math.PI*2);
+      ctx.stroke();
+
+      // flowline
+      ctx.strokeStyle = "#60a5fa";
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(blockX+40, wingY);
+      ctx.lineTo(canvas.clientWidth-20, wingY+14);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(15,23,42,0.7)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(blockX+40, wingY);
+      ctx.lineTo(canvas.clientWidth-20, wingY+14);
       ctx.stroke();
     }
 
     function drawGaugesBox() {
       const x = objects.gaugesZone.x;
-      const y = 20;
-      const w = 130;
-      const h = 80;
+      const y = 18;
+      const w = 140;
+      const h = 90;
 
-      ctx.fillStyle = "rgba(15,23,42,0.85)";
+      ctx.fillStyle = "rgba(15,23,42,0.92)";
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 10);
+      ctx.fill();
       ctx.strokeStyle = "#38bdf8";
       ctx.lineWidth = 2;
-      ctx.fillRect(x, y, w, h);
-      ctx.strokeRect(x, y, w, h);
+      ctx.stroke();
 
       ctx.fillStyle = "#e5e7eb";
-      ctx.font = "10px system-ui";
-      ctx.fillText("DIGITAL GAUGES", x + 14, y + 16);
-      ctx.fillText("WHP / FLP", x + 28, y + 30);
+      ctx.font = "11px system-ui";
+      ctx.fillText("DIGITAL GAUGES", x + 18, y + 22);
+      ctx.fillText("WHP / FLP", x + 34, y + 38);
     }
 
     function drawAdjBeanPlatform() {
       const x = objects.adjBean.x;
-      const y = groundY() - 20;
+      const platformY = groundY() - 14;
 
-      ctx.fillStyle = "#4b5563";
-      ctx.fillRect(x, y, 70, 10);
-
-      // small stand
       ctx.fillStyle = "#6b7280";
-      ctx.fillRect(x + 24, y - 24, 20, 24);
+      ctx.beginPath();
+      ctx.roundRect(x, platformY, 76, 10, 6);
+      ctx.fill();
+
+      ctx.fillStyle = "#9ca3af";
+      ctx.beginPath();
+      ctx.roundRect(x+26, platformY-24, 24, 24, 6);
+      ctx.fill();
     }
 
     function updateObjectsPositions() {
-      objects.wellhead.x = canvas.width * 0.48;
-      objects.adjBean.x = canvas.width - 130;
+      objects.wellhead.x = canvas.clientWidth * 0.48;
+      objects.adjBean.x = canvas.clientWidth - 140;
     }
 
     function update() {
@@ -489,12 +572,13 @@
       if (keys.right) worker.x += worker.speed;
 
       if (worker.x < 0) worker.x = 0;
-      if (worker.x + worker.width > canvas.width) worker.x = canvas.width - worker.width;
+      if (worker.x + worker.width > canvas.clientWidth) worker.x = canvas.clientWidth - worker.width;
     }
 
     function render() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawGround();
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      drawBackgroundDecor();
+      drawTiles();
       drawWellhead();
       drawAdjBeanPlatform();
       drawGaugesBox();
