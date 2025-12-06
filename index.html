@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>KOC Facility 3D Training – Full Plant Map</title>
+  <title>KOC Gathering Center – Interactive 3D Facility Map</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 
   <style>
@@ -16,7 +16,7 @@
       font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     #canvas-container { position:fixed; inset:0; z-index:0; }
-    #ui-root { position:fixed; inset:0; z-index:1; pointer-events:none; }
+    #ui-root        { position:fixed; inset:0; z-index:1; pointer-events:none; }
 
     .panel {
       pointer-events:auto;
@@ -47,9 +47,9 @@
       box-shadow:0 0 10px #22c55e;
     }
     #hud-title { font-weight:600; }
-    #hud-sub { color:#9ca3af; font-size:10px; }
+    #hud-sub   { color:#9ca3af; font-size:10px; }
 
-    /* INFO PANEL (RIGHT) */
+    /* INFO PANEL */
     #info-panel {
       position:absolute;
       top:10px;
@@ -196,14 +196,13 @@
       font-size:11px;
       color:#d1d5db;
     }
-
     #missions-list::-webkit-scrollbar { width:4px; }
     #missions-list::-webkit-scrollbar-thumb {
       background:rgba(148,163,184,.8);
       border-radius:999px;
     }
 
-    /* HINT BAR (BOTTOM) */
+    /* HINT BAR */
     #hint-bar {
       position:absolute;
       bottom:12px;
@@ -218,7 +217,6 @@
     }
     #hint-bar span { opacity:.9; }
 
-    /* RESPONSIVE */
     @media (max-width:640px) {
       #info-panel {
         width:94vw;
@@ -284,12 +282,11 @@
     </div>
   </div>
 
-  <!-- Three.js & OrbitControls من jsDelivr (يعمل على الآيفون) -->
+  <!-- Three.js & OrbitControls من jsDelivr -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
 
   <script>
-    // تحقّق من تحميل المكتبات
     if (!window.THREE || !THREE.OrbitControls) {
       document.getElementById("info-description").innerHTML =
         "Three.js أو OrbitControls لم يتم تحميلهما من jsDelivr.<br>" +
@@ -333,7 +330,7 @@
             "Select any unit to see where its feed comes from and where it sends its outlet.";
           infoFooterText.textContent = "No unit selected.";
           hudTitle.textContent = "Facility: Full Plant Overview";
-          hudSub.textContent = "Use the 3D map to learn every unit and its function";
+          hudSub.textContent   = "Use the 3D map to learn every unit and its function";
           langToggle.textContent = "AR / EN";
         } else {
           infoTitle.textContent = "اضغط على أي معدّة في المنشأة";
@@ -348,19 +345,17 @@
             "اختر أي معدّة لمعرفة من أين يأتي الفيد وإلى أين يذهب المخرج داخل مركز التجميع.";
           infoFooterText.textContent = "لا توجد معدّة مختارة.";
           hudTitle.textContent = "المنشأة: خريطة كاملة";
-          hudSub.textContent = "استخدم الخريطة ثلاثية الأبعاد للتعرّف على كل معدّة ووظيفتها";
+          hudSub.textContent   = "استخدم الخريطة ثلاثية الأبعاد للتعرّف على كل معدّة ووظيفتها";
           langToggle.textContent = "EN / AR";
         }
       } else {
-        // لو في معدّة مختارة، نعيد عرض بياناتها باللغة الجديدة
         var eq = equipmentMap[lastSelectedId];
         if (eq) applyEquipmentToPanel(eq);
       }
-
-      renderMissionsList(); // نحدّث أسماء المهام باللغة الحالية
+      renderMissionsList();
     }
 
-    // إعداد المشهد ثلاثي الأبعاد
+    // إعداد المشهد
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x020617);
 
@@ -405,12 +400,12 @@
     var grid = new THREE.GridHelper(260, 26, 0x4b5563, 0x1f2937);
     scene.add(grid);
 
-    // مناطق المنشأة حسب الواقع (أربعة زوايا)
+    // مناطق المنشأة (أربع زوايا)
     var facilities = {
-      tv:   { id: "tv",   nameEn: "TV Compression / CRU",                   nameAr:"منشأة ضغط غاز الخزانات (TV / CRU)",   color:0x22d3ee, x:-70, z:-70 },
-      ddp:  { id: "ddp",  nameEn: "Wet Oil Treatment (DDP / Desalter)",    nameAr:"معالجة النفط الرطب (DDP / Desalter)", color:0x22c55e, x: 70, z:-70 },
-      main: { id: "main", nameEn: "Main Plant (Separators / Tanks)",       nameAr:"المحطة الرئيسية (فواصل / خزانات)",    color:0xf97316, x:-70, z: 70 },
-      tr:   { id: "tr",   nameEn: "Crude Transit Facility",                nameAr:"منشأة ترانزيت النفط الخام",           color:0x6366f1, x: 70, z: 70 }
+      tv:   { id:"tv",   nameEn:"TV Compression / CRU",                nameAr:"منشأة ضغط غاز الخزانات (TV / CRU)",   color:0x22d3ee, x:-70, z:-70 },
+      ddp:  { id:"ddp",  nameEn:"Wet Oil Treatment (DDP / Desalter)", nameAr:"معالجة النفط الرطب (DDP / Desalter)", color:0x22c55e, x: 70, z:-70 },
+      main: { id:"main", nameEn:"Main Plant (Separators / Tanks)",    nameAr:"المحطة الرئيسية (فواصل / خزانات)",    color:0xf97316, x:-70, z: 70 },
+      tr:   { id:"tr",   nameEn:"Crude Transit Facility",             nameAr:"منشأة ترانزيت النفط الخام",           color:0x6366f1, x: 70, z: 70 }
     };
 
     function createFacilityBase(fac) {
@@ -427,7 +422,6 @@
       pad.castShadow = true;
       scene.add(pad);
 
-      // Label فوق الباد
       var c = document.createElement("canvas");
       c.width = 512; c.height = 128;
       var ctx = c.getContext("2d");
@@ -454,10 +448,9 @@
     createFacilityBase(facilities.main);
     createFacilityBase(facilities.tr);
 
-    // بيانات المعدات الواقعية (من كل منشأة)
-    // meshType: verticalTank, horizontalVessel, pump, heaterBox, tower, smallDrum
+    // بيانات المعدات (مأخوذة من ملفات الـ PDF)
     var equipmentData = [
-      // --- TV COMPRESSION / CRU ---
+      // TV / CRU
       {
         id:"tv_tanks",
         facility:"tv",
@@ -470,18 +463,18 @@
         size:{radius:6,height:12},
         color:0x38bdf8,
         descriptionEn:
-          "Wet, dual and dry tanks store crude and generate very low-pressure tank vapor (TV gas) at the roof. The vapor is collected by a large TV gas main header.",
+          "Wet, dual and dry tanks store crude and generate very low-pressure tank vapor (TV gas) at the roof. The vapor is collected by a large TV gas header.",
         descriptionAr:
           "خزانات Wet و Dual و Dry تخزن النفط وتولد غاز الخزانات TV بضغط منخفض جداً عند السقف، ويتم سحبه بواسطة هيدر TV رئيسي.",
         keyPointsEn:[
           "Source of C3–C5 tank vapor gas.",
-          "Blanketing / pressurizing gas keeps tank pressure slightly positive.",
-          "All tanks tie into a common 42–48\" TV gas header."
+          "Pressurizing gas keeps tank pressure slightly positive.",
+          "All tanks tie into a common TV gas header."
         ],
         keyPointsAr:[
           "المصدر الأساسي لغاز الخزانات (C3–C5).",
-          "غاز الضغط (Blanketing) يحافظ على ضغط موجب بسيط في الخزان.",
-          "جميع الخزانات مربوطة على هيدر TV مشترك قطره 42–48 انش."
+          "غاز الضغط يحافظ على ضغط موجب بسيط في الخزان.",
+          "كل الخزانات مربوطة على هيدر TV مشترك."
         ],
         flowEn:"Flow: Crude in tanks → vapor space → TV gas main header → CRU suction & new TV compressor.",
         flowAr:"مسار الفلو: نفط في الخزانات → غاز في سقف الخزان → هيدر TV الرئيسي → سحب CRU وضاغط TV الجديد."
@@ -490,8 +483,8 @@
         id:"tv_scrubber",
         facility:"tv",
         meshType:"smallDrum",
-        nameEn:"CRU Suction Scrubber (C-101)",
-        nameAr:"فاصل سحب CRU – C-101",
+        nameEn:"CRU Suction Scrubber",
+        nameAr:"فاصل سحب CRU",
         typeEn:"Suction Scrubber",
         typeAr:"فاصل سحب",
         position:{x:-70,y:4,z:-95},
@@ -503,16 +496,16 @@
           "فاصل السحب يزيل قطرات السوائل من غاز TV قبل دخوله ضواغط CRU الترددية.",
         keyPointsEn:[
           "Protects compressor cylinders from liquid carry-over.",
-          "Located on the 36\" CRU suction line from the TV gas header.",
+          "Located on the suction line from the TV gas header.",
           "Level and pressure are checked before starting CRU."
         ],
         keyPointsAr:[
-          "يحمي اسطوانات الضاغط من دخول السوائل (Carry-over).",
-          "موجود على خط السحب 36 انش القادم من هيدر TV.",
+          "يحمي اسطوانات الضاغط من دخول السوائل.",
+          "موجود على خط السحب القادم من هيدر TV.",
           "يتم فحص المستوى والضغط قبل تشغيل CRU."
         ],
-        flowEn:"Flow: TV header → 36\" suction → C-101 scrubber → CRU first-stage cylinders.",
-        flowAr:"مسار الفلو: هيدر TV → خط سحب 36\" → فاصل C-101 → اسطوانات CRU للمرحلة الأولى."
+        flowEn:"Flow: TV header → suction → scrubber → CRU first-stage cylinders.",
+        flowAr:"مسار الفلو: هيدر TV → خط السحب → فاصل السحب → مراحل CRU."
       },
       {
         id:"tv_cru",
@@ -526,27 +519,27 @@
         size:{radius:4.5,length:16},
         color:0x0284c7,
         descriptionEn:
-          "The CRU boosts TV gas across three stages. Inter-stage coolers and scrubbers condense liquids, sending lean gas to HP gas and condensate back to the crude system.",
+          "The CRU boosts TV gas in multiple stages with inter-stage coolers and scrubbers, sending lean gas to HP gas and condensate back to the crude system.",
         descriptionAr:
-          "وحدة CRU ترفع ضغط غاز TV عبر ثلاث مراحل، مع مبردات وفواصل بين المراحل، بحيث يذهب الغاز الخفيف لنظام HP بينما تعاد المكثفات إلى نظام النفط.",
+          "وحدة CRU ترفع ضغط غاز TV عبر عدة مراحل مع مبردات وفواصل بين المراحل؛ الغاز الخفيف يذهب لهيدر HP والمكثفات تعاد إلى نظام النفط.",
         keyPointsEn:[
-          "Typical capacity ~9.2 MMSCFD TV gas and about 4200 BPD condensate (per GC).",
-          "Includes suction bottles, discharge bottles, coolers and scrubbers.",
-          "Recycle and control valves maintain safe discharge pressure."
+          "Handles TV gas from tank vapor header.",
+          "Includes suction / discharge bottles, coolers and scrubbers.",
+          "Recycle valves maintain safe discharge pressure."
         ],
         keyPointsAr:[
-          "سعة تقريبية 9.2 MMSCFD من غاز TV وحوالي 4200 برميل/يوم مكثفات لكل GC.",
-          "تحتوي على Suction / Discharge Bottles ومبرّدات وفواصل بين المراحل.",
-          "صمامات Recycle وتحكم تحافظ على ضغط الخروج في الحدود الآمنة."
+          "تستقبل غاز TV من هيدر غاز الخزانات.",
+          "تحتوي على Bottles ومبردات وفواصل بين المراحل.",
+          "يتم استخدام صمامات Recycle للحفاظ على ضغط المخرج."
         ],
-        flowEn:"Flow: C-101 → CRU stages → condensate vessel → HP gas header + condensate route.",
-        flowAr:"مسار الفلو: فاصل C-101 → مراحل ضواغط CRU → وعاء المكثفات → هيدر غاز HP + مسار المكثفات."
+        flowEn:"Flow: Suction scrubber → CRU stages → condensate vessel → HP gas header + condensate line.",
+        flowAr:"مسار الفلو: فاصل السحب → مراحل CRU → وعاء المكثفات → هيدر غاز HP + خط المكثفات."
       },
       {
         id:"tv_newComp",
         facility:"tv",
         meshType:"horizontalVessel",
-        nameEn:"New TV Compressor (Centrifugal)",
+        nameEn:"New TV Centrifugal Compressor",
         nameAr:"ضاغط TV الجديد (طارد مركزي)",
         typeEn:"Centrifugal TV Compression",
         typeAr:"ضاغط غاز خزانات طارد مركزي",
@@ -556,22 +549,22 @@
         descriptionEn:
           "The new TV compressor handles most of the tank vapor gas load in modern gathering centers, with CRU on standby as backup.",
         descriptionAr:
-          "الضاغط الجديد للـ TV يتحمل معظم حمل غاز الخزانات في المراكز الحديثة، بينما تبقى وحدة CRU في وضع احتياط.",
+          "الضاغط الجديد للـ TV يتحمل معظم حمل غاز الخزانات في المراكز الحديثة، بينما تبقى وحدة CRU في وضع الاحتياط.",
         keyPointsEn:[
-          "Takes suction from the same TV gas main header via dedicated ESDV.",
-          "Multi-stage centrifugal compression with inter-cooling and separation.",
+          "Takes suction from the same TV gas header via dedicated ESDV.",
+          "Multi-stage centrifugal compression.",
           "Reduces flaring by recovering TV gas as condensate and lean gas."
         ],
         keyPointsAr:[
           "يسحب من نفس هيدر TV عبر صمام ESDV مخصص.",
-          "ضغط طارد مركزي متعدد المراحل مع تبريد وفصل بين المراحل.",
+          "ضغط طارد مركزي متعدد المراحل.",
           "يقلل الفلير عن طريق استرجاع غاز TV كمكثفات وغاز خفيف."
         ],
         flowEn:"Flow: TV header → TV compressor suction → stages → condensate / lean gas to LP / HP systems.",
         flowAr:"مسار الفلو: هيدر TV → سحب ضاغط TV → المراحل → مكثفات + غاز خفيف إلى أنظمة LP / HP."
       },
 
-      // --- WET OIL TREATMENT / DDP ---
+      // DDP / Wet Oil Treatment
       {
         id:"ddp_inlet",
         facility:"ddp",
@@ -588,13 +581,13 @@
         descriptionAr:
           "معظم الخام يصل كنفط رطب يحتوي على ماء مستحلب، ويتم تجميعه في هيدر الإيمولشن قبل التسخين ونزع الأملاح.",
         keyPointsEn:[
-          "Free water is removed earlier in separators and wet tanks.",
+          "Free water removed earlier in separators and wet tanks.",
           "Emulsified water droplets remain dispersed in crude.",
           "This header feeds the DDP heaters and desalter vessels."
         ],
         keyPointsAr:[
           "الماء الحر يفصل مبكراً في الفواصل وخزانات Wet.",
-          "يبقى ماء مستحلب داخل النفط على شكل قطرات صغيرة جداً.",
+          "يبقى ماء مستحلب داخل النفط على شكل قطرات صغيرة.",
           "هذا الهيدر يغذي سخانات DDP وأوعية الـ Desalter."
         ],
         flowEn:"Flow: Well separators / wet tanks → emulsion header → heaters → desalter vessels.",
@@ -614,16 +607,16 @@
         descriptionEn:
           "Heaters raise crude temperature (typically 140–160°F) to reduce viscosity and help demulsifier and wash water break the emulsion.",
         descriptionAr:
-          "السخانات ترفع درجة حرارة النفط (عادة 160–140°F) لتقليل اللزوجة ومساعدة الكيماوي وماء الغسيل على كسر الإيمولشن.",
+          "السخانات ترفع درجة حرارة النفط لتقليل اللزوجة ومساعدة الكيماوي وماء الغسيل على كسر الإيمولشن.",
         keyPointsEn:[
-          "Indirect or bath heaters are often used for safety.",
+          "Indirect or bath heaters often used.",
           "Too much temperature increases scaling and energy cost.",
           "Outlet temperature is a key parameter for DDP performance."
         ],
         keyPointsAr:[
-          "تستخدم سخانات غير مباشرة أو Bath Heaters لاعتبارات السلامة.",
-          "زيادة الحرارة أكثر من اللازم تسبب ترسبات وتزيد استهلاك الطاقة.",
-          "درجة حرارة مخرج السخانات عامل أساسي في أداء DDP."
+          "يتم استخدام سخانات غير مباشرة لأسباب السلامة.",
+          "الحرارة العالية جداً تسبب ترسبات وتزيد استهلاك الطاقة.",
+          "درجة حرارة المخرج عامل أساسي في أداء DDP."
         ],
         flowEn:"Flow: Emulsion header → crude heaters → desalter feed.",
         flowAr:"مسار الفلو: هيدر الإيمولشن → سخانات النفط → تغذية أوعية الـ Desalter."
@@ -642,22 +635,22 @@
         descriptionEn:
           "Electrostatic desalter vessels mix crude with low-salinity wash water and apply an electric field so water droplets coalesce and separate.",
         descriptionAr:
-          "أوعية الـ Desalter تستخدم ماء غسيل منخفض الملوحة مع حقل كهربائي لتجميع قطرات الماء المالحة وفصلها عن النفط.",
+          "أوعية الـ Desalter تستخدم ماء غسيل منخفض الملوحة وحقل كهربائي لتجميع قطرات الماء المالحة وفصلها عن النفط.",
         keyPointsEn:[
           "Wash water rate typically 3–8% of crude feed.",
-          "Mixing valve creates 10–15 psig drop for proper distribution.",
+          "Mixing valve creates pressure drop for proper distribution.",
           "Separated brine leaves from vessel bottom to water treatment."
         ],
         keyPointsAr:[
-          "معدل ماء الغسيل يكون عادةً 8–3% من معدل النفط الداخل.",
-          "صمام الخلط يخلق فرق ضغط 15–10 psi لتوزيع الماء والكيماوي.",
-          "المحلول الملحي (Brine) يخرج من أسفل الوعاء إلى معالجة المياه."
+          "معدل ماء الغسيل يكون عادةً 3–8% من معدل النفط.",
+          "صمام الخلط يعطي فرق ضغط لتوزيع الماء والكيماوي.",
+          "المحلول الملحي يخرج من أسفل الوعاء إلى معالجة المياه."
         ],
         flowEn:"Flow: Heated wet crude + wash water → 1st desalter → 2nd desalter → treated dry crude to dry tanks / main plant.",
         flowAr:"مسار الفلو: نفط رطب مسخن + ماء غسيل → Desalter المرحلة الأولى → الثانية → نفط جاف إلى خزانات Dry / المحطة الرئيسية."
       },
 
-      // --- MAIN PLANT ---
+      // Main plant
       {
         id:"main_seps",
         facility:"main",
@@ -675,16 +668,16 @@
           "فواصل الضغط العالي والمنخفض تفصل تيار الآبار إلى غاز ونفط وماء منتج عند ضغوط محددة.",
         keyPointsEn:[
           "Gas outlets feed HP and LP gas headers.",
-          "Oil outlets go to wet tanks / DDP for further treatment.",
-          "Produced water leaves through water outlet to treatment systems."
+          "Oil outlets go to wet tanks / DDP.",
+          "Produced water leaves through water outlet to treatment."
         ],
         keyPointsAr:[
-          "مخارج الغاز تغذي هيدرات الغاز HP و LP.",
-          "مخارج النفط تذهب إلى خزانات Wet / DDP لإكمال المعالجة.",
-          "الماء المنتج يخرج إلى أنظمة معالجة المياه."
+          "مخارج الغاز تغذي هيدرات HP و LP.",
+          "النفط يذهب إلى خزانات Wet أو DDP.",
+          "الماء المنتج يخرج إلى نظام معالجة المياه."
         ],
         flowEn:"Flow: Well flow → HP/LP separators → gas to HP/LP gas → oil to wet oil treatment → water to disposal.",
-        flowAr:"مسار الفلو: إنتاج الآبار → فواصل HP/LP → غاز إلى أنظمة الغاز → نفط إلى معالجة النفط الرطب → ماء إلى التصريف/المعالجة."
+        flowAr:"مسار الفلو: إنتاج الآبار → فواصل HP/LP → غاز إلى أنظمة الغاز → نفط إلى معالجة النفط الرطب → ماء إلى التصريف."
       },
       {
         id:"main_tanks",
@@ -703,12 +696,12 @@
           "خزانات المحطة الرئيسية توفر سعة موازنة وتخزين نهائي، وتحتوي خزانات Dry على النفط المعالج الجاهز للتصدير عبر مضخات الترانزيت.",
         keyPointsEn:[
           "Tank vapor (TV gas) is routed to the TV compression facility.",
-          "Dry tank level interlocks protect booster and main oil line pumps.",
+          "Dry tank level interlocks protect booster and MOL pumps.",
           "Equalizing lines balance level and pressure between tanks."
         ],
         keyPointsAr:[
-          "غاز الخزانات (TV) يرسل إلى منشأة ضغط غاز الخزانات (TV/CRU).",
-          "سويتشات مستوى خزانات Dry تحمي مضخات البوستر و MOL.",
+          "غاز الخزانات (TV) يرسل إلى منشأة ضغط غاز الخزانات.",
+          "مستوى خزانات Dry يحمي مضخات البوستر و MOL.",
           "خطوط Equalizing توازن المستوى والضغط بين الخزانات."
         ],
         flowEn:"Flow: Oil from separators / DDP → wet/dual tanks → dry tanks → transit suction header.",
@@ -719,7 +712,7 @@
         facility:"main",
         meshType:"smallDrum",
         nameEn:"Pressurizing Gas System",
-        nameAr:"نظام غاز الضغط (Pressurizing Gas)",
+        nameAr:"نظام غاز الضغط",
         typeEn:"Lean Gas Pressurizing",
         typeAr:"غاز ضغط خفيف",
         position:{x:-50,y:4,z:60},
@@ -730,20 +723,20 @@
         descriptionAr:
           "غاز الضغط يُؤخذ من غاز HP ثم يُخفض ويرسل إلى الخزانات وأنظمة الوقود للحفاظ على ضغط موجب وتقليل دخول الهواء.",
         keyPointsEn:[
-          "Manual pressurizing valves towards wet/dual/dry tanks normally remain open.",
+          "Supply valves towards tanks usually remain open.",
           "Pressure control valves protect the pressurizing header.",
           "Supports stable tank levels and reduces flaring."
         ],
         keyPointsAr:[
-          "صمامات تزويد غاز الضغط للخزانات تبقى مفتوحة عادةً 24/7.",
-          "صمامات تحكم بالضغط تحمي هيدر Pressurizing من ارتفاع الضغط.",
-          "يساعد في ثبات التشغيل وتقليل الفلير."
+          "صمامات تزويد غاز الضغط للخزانات تبقى مفتوحة عادةً.",
+          "صمامات التحكم بالضغط تحمي هيدر Pressurizing.",
+          "يساعد على ثبات التشغيل وتقليل الفلير."
         ],
         flowEn:"Flow: HP gas → pressure control → pressurizing header → storage tanks / fuel gas users.",
-        flowAr:"مسار الفلو: غاز HP → صمام تحكم بالضغط → هيدر Pressurizing → خزانات التخزين / مستهلكي الوقود."
+        flowAr:"مسار الفلو: غاز HP → صمام تحكم → هيدر Pressurizing → خزانات التخزين / مستهلكي الوقود."
       },
 
-      // --- TRANSIT FACILITY ---
+      // Transit facility
       {
         id:"tr_dryTankOut",
         facility:"tr",
@@ -758,15 +751,15 @@
         descriptionEn:
           "The dry tank outlet and common suction header feed the booster and main oil line pumps for crude export.",
         descriptionAr:
-          "مخرج خزان Dry والهيدر المشترك للسحب يغذي مضخة البوستر ومضخة Main Oil Line للتصدير.",
+          "مخرج خزان Dry والهيدر المشترك للسحب يغذي مضخة البوستر ومضخة MOL للتصدير.",
         keyPointsEn:[
-          "Tank level must be above a minimum set point before starting pumps.",
+          "Tank level must be above minimum before starting pumps.",
           "Suction MOVs and manual valves must be open.",
-          "Strainers protect the pumps from debris."
+          "Strainers protect pumps from debris."
         ],
         keyPointsAr:[
-          "يجب أن يكون مستوى الخزان فوق حد معين قبل تشغيل المضخات.",
-          "صمامات السحب (MOV + يدوي) يجب أن تكون مفتوحة.",
+          "يجب أن يكون مستوى الخزان فوق حد معين قبل التشغيل.",
+          "صمامات السحب يجب أن تكون مفتوحة.",
           "الـ Strainers تحمي المضخات من الشوائب."
         ],
         flowEn:"Flow: Dry tank → suction header → booster pump.",
@@ -786,7 +779,7 @@
         descriptionEn:
           "The booster pump increases crude pressure from tank level to a suitable suction pressure for the main oil line pump.",
         descriptionAr:
-          "مضخة البوستر ترفع ضغط النفط من ضغط الخزان إلى ضغط مناسب لسحب مضخة Main Oil Line.",
+          "مضخة البوستر ترفع ضغط النفط من ضغط الخزان إلى ضغط مناسب لسحب مضخة MOL.",
         keyPointsEn:[
           "Equipped with suction strainer and minimum-flow recycle line.",
           "Discharge line tied directly to the MOL pump suction.",
@@ -795,7 +788,7 @@
         keyPointsAr:[
           "مزودة بـ Strainer على السحب وخط Recycle لحد أدنى من الفلو.",
           "مخرج المضخة متصل مباشرةً بسحب مضخة MOL.",
-          "حماية المضخة تعتمد على إنترلوك مستوى الخزان والضغط."
+          "الحماية تعتمد على إنترلوك مستوى الخزان والضغط."
         ],
         flowEn:"Flow: Dry tank suction header → booster pump → MOL pump suction.",
         flowAr:"مسار الفلو: هيدر سحب خزان Dry → مضخة بوستر → سحب مضخة MOL."
@@ -830,16 +823,16 @@
       }
     ];
 
-    // إنشاء مجسمات المعدات حسب نوعها
+    // إنشاء أشكال المعدات
     var equipmentMap = {};
     var selectableObjects = [];
     var highlightGroups = {};
 
     function createVerticalTank(eq, clusterIndex, clusterTotal) {
       var group = new THREE.Group();
-
       var radius = eq.size.radius;
       var height = eq.size.height;
+
       var geo = new THREE.CylinderGeometry(radius, radius, height, 24);
       var mat = new THREE.MeshStandardMaterial({
         color:eq.color,
@@ -853,7 +846,6 @@
       tank.userData.baseColor = mat.color.clone();
       group.add(tank);
 
-      // dome top
       var domeGeo = new THREE.SphereGeometry(radius*0.98, 24, 16, 0, Math.PI*2, 0, Math.PI/2);
       var dome = new THREE.Mesh(domeGeo, mat.clone());
       dome.position.y = height/2;
@@ -861,7 +853,6 @@
       dome.userData.baseColor = dome.material.color.clone();
       group.add(dome);
 
-      // legs
       for (var i=0;i<4;i++){
         var legGeo = new THREE.CylinderGeometry(radius*0.12,radius*0.12,2,12);
         var legMat = new THREE.MeshStandardMaterial({color:0x111827,roughness:0.8,metalness:0.1});
@@ -872,12 +863,10 @@
         group.add(leg);
       }
 
-      // slight offset for clusters
       if (typeof clusterIndex === "number" && clusterTotal>1) {
         var offset = (clusterIndex - (clusterTotal-1)/2)* (radius*2.6);
         group.position.x += offset;
       }
-
       return group;
     }
 
@@ -911,7 +900,6 @@
       head2.userData.baseColor = head2.material.color.clone();
       group.add(head1); group.add(head2);
 
-      // small legs
       for (var i=0;i<2;i++){
         var legGeo = new THREE.BoxGeometry(r*1.2,1.5,r*1.2);
         var legMat = new THREE.MeshStandardMaterial({color:0x111827,roughness:0.9,metalness:0.05});
@@ -920,7 +908,6 @@
         leg.receiveShadow = true;
         group.add(leg);
       }
-
       return group;
     }
 
@@ -942,7 +929,6 @@
       body.userData.baseColor = body.material.color.clone();
       group.add(body);
 
-      // stack
       var stackGeo = new THREE.CylinderGeometry(1.2,1.2,h*1.2,20);
       var stackMat = new THREE.MeshStandardMaterial({color:0x9ca3af,metalness:0.5,roughness:0.3});
       var stack = new THREE.Mesh(stackGeo,stackMat);
@@ -981,7 +967,7 @@
       motorGeo.rotateZ(Math.PI/2);
       var motorMat = new THREE.MeshStandardMaterial({color:0x9ca3af,metalness:0.6,roughness:0.3});
       var motor = new THREE.Mesh(motorGeo,motorMat);
-      motor.position.set(-r*1.5, h*0.6, 0);
+      motor.position.set(-r*1.5,h*0.6,0);
       motor.castShadow = true;
       group.add(motor);
 
@@ -1037,10 +1023,8 @@
 
       group.position.set(eq.position.x, eq.position.y, eq.position.z);
       group.userData.equipmentId = eq.id;
-
       scene.add(group);
 
-      // برج إضاءة صغير فوق المعدة
       var beaconGeo = new THREE.CylinderGeometry(0.6,0.6,2,16);
       var beaconMat = new THREE.MeshBasicMaterial({color:0xffffff});
       var beacon = new THREE.Mesh(beaconGeo,beaconMat);
@@ -1055,11 +1039,10 @@
 
     equipmentData.forEach(createEquipmentMesh);
 
-    // اختيار المعدات بالـ Raycaster
+    // اختيار المعدات
     var raycaster = new THREE.Raycaster();
     var mouse = new THREE.Vector2();
     var lastSelectedId = null;
-    var pulseTime = 0;
 
     function setHighlight(id, on) {
       var entry = highlightGroups[id];
@@ -1078,9 +1061,7 @@
     }
 
     function clearAllHighlights() {
-      for (var id in highlightGroups) {
-        setHighlight(id,false);
-      }
+      for (var id in highlightGroups) setHighlight(id,false);
     }
 
     function onCanvasClick(event) {
@@ -1094,15 +1075,10 @@
       var hits = raycaster.intersectObjects(selectableObjects, true);
       if (hits.length > 0) {
         var g = hits[0].object;
-        while (g && !g.userData.equipmentId && g.parent) {
-          g = g.parent;
-        }
-        if (g && g.userData.equipmentId) {
-          selectEquipment(g.userData.equipmentId);
-        }
+        while (g && !g.userData.equipmentId && g.parent) g = g.parent;
+        if (g && g.userData.equipmentId) selectEquipment(g.userData.equipmentId);
       }
     }
-
     renderer.domElement.addEventListener("click", onCanvasClick);
 
     function selectEquipment(id) {
@@ -1124,35 +1100,36 @@
 
     function applyEquipmentToPanel(eq) {
       var fac = facilities[eq.facility];
-
       var isEn = (lang === "en");
 
-      var facName = isEn ? fac.nameEn : fac.nameAr;
-      var title = isEn ? eq.nameEn : eq.nameAr;
-      var type = isEn ? eq.typeEn : eq.typeAr;
-      var desc = isEn ? eq.descriptionEn : eq.descriptionAr;
-      var points = isEn ? eq.keyPointsEn : eq.keyPointsAr;
-      var flow = isEn ? eq.flowEn : eq.flowAr;
+      var facName = isEn ? fac.nameEn   : fac.nameAr;
+      var title   = isEn ? eq.nameEn    : eq.nameAr;
+      var type    = isEn ? eq.typeEn    : eq.typeAr;
+      var desc    = isEn ? eq.descriptionEn : eq.descriptionAr;
+      var points  = isEn ? eq.keyPointsEn   : eq.keyPointsAr;
+      var flow    = isEn ? eq.flowEn        : eq.flowAr;
 
       infoTitle.textContent = title;
-      infoTag.textContent = facName;
-      infoType.textContent = type;
+      infoTag.textContent   = facName;
+      infoType.textContent  = type;
       infoDescription.textContent = desc;
-      infoPoints.innerHTML = "• " + points.join("<br>• ");
-      infoFlow.textContent = flow;
+      infoPoints.innerHTML  = "• " + points.join("<br>• ");
+      infoFlow.textContent  = flow;
 
       if (isEn) {
-        infoFooterText.textContent = "Selected unit: " + eq.nameEn + " – tap another unit to change.";
+        infoFooterText.textContent =
+          "Selected unit: " + eq.nameEn + " – tap another unit to change.";
         hudTitle.textContent = "Facility: " + fac.nameEn;
-        hudSub.textContent = "You are viewing a unit inside the " + fac.nameEn + " area.";
+        hudSub.textContent   = "You are viewing a unit inside the " + fac.nameEn + " area.";
       } else {
-        infoFooterText.textContent = "المعدة المختارة: " + eq.nameAr + " – اضغط على معدّة أخرى للتغيير.";
+        infoFooterText.textContent =
+          "المعدة المختارة: " + eq.nameAr + " – اضغط على معدّة أخرى للتغيير.";
         hudTitle.textContent = "المنشأة: " + fac.nameAr;
-        hudSub.textContent = "أنت الآن في منطقة " + fac.nameAr + " على الخريطة.";
+        hudSub.textContent   = "أنت الآن في منطقة " + fac.nameAr + " على الخريطة.";
       }
     }
 
-    // مهام تدريب (وصف فقط، بدون تتبع خطوات معقد)
+    // مهام تدريب
     var missions = [
       {
         id:"tvGasPath",
@@ -1160,7 +1137,7 @@
         titleEn:"TV Gas Path – Tanks → CRU / TV Compressor → HP Gas",
         titleAr:"مسار غاز الخزانات TV – من الخزانات إلى CRU / ضاغط TV ثم HP Gas",
         descEn:"Follow how low-pressure tank vapor gas is collected from wet/dual/dry tanks and compressed to HP gas.",
-        descAr:"تتبّع كيف يتم تجميع غاز الخزانات منخفض الضغط من خزانات Wet/Dual/Dry ثم ضغطه ليصل إلى نظام غاز HP."
+        descAr:"تتبع كيف يتم تجميع غاز الخزانات منخفض الضغط من خزانات Wet/Dual/Dry ثم ضغطه ليصل إلى نظام غاز HP."
       },
       {
         id:"wetOilPath",
@@ -1245,33 +1222,32 @@
 
       if (lang === "en") {
         infoTitle.textContent = mission.titleEn;
-        infoTag.textContent = facilities[mission.facility].nameEn;
-        infoType.textContent = "Training mission";
+        infoTag.textContent   = fac.nameEn;
+        infoType.textContent  = "Training mission";
         infoDescription.textContent = mission.descEn;
         infoPoints.innerHTML =
           "• Rotate and zoom to see all units in this area.<br>" +
           "• Tap each unit to read its description and flow path.";
         infoFlow.textContent =
-          "Tip: Start from inlet units (tanks or headers), then follow pumps / compressors and finally look at export or HP/LP gas systems.";
+          "Tip: Start from inlet units (tanks or headers), then follow pumps/compressors and finally export or HP/LP gas systems.";
         infoFooterText.textContent = "Mission selected – explore the highlighted facility area in 3D.";
       } else {
         infoTitle.textContent = mission.titleAr;
-        infoTag.textContent = facilities[mission.facility].nameAr;
-        infoType.textContent = "مهمة تدريبية";
+        infoTag.textContent   = fac.nameAr;
+        infoType.textContent  = "مهمة تدريبية";
         infoDescription.textContent = mission.descAr;
         infoPoints.innerHTML =
           "• قم بالدوران والتقريب لرؤية جميع المعدات في هذه المنطقة.<br>" +
           "• اضغط على كل معدّة لقراءة وصفها ومسار الفلو.";
         infoFlow.textContent =
-          "نصيحة: ابدأ من معدات الدخول (خزانات أو هيدرات)، ثم اتبع المضخات/الضواغط، وفي النهاية شاهد مسار التصدير أو الغاز HP/LP.";
+          "نصيحة: ابدأ من معدات الدخول (خزانات أو هيدرات)، ثم اتبع المضخات/الضواغط، وفي النهاية مسار التصدير أو الغاز HP/LP.";
         infoFooterText.textContent = "تم اختيار مهمة تدريبية – استكشف المنطقة المحددة ثلاثية الأبعاد.";
       }
     }
 
     renderMissionsList();
-    applyLanguage(); // إعداد النصوص الافتراضية
+    applyLanguage();
 
-    // ريسايز
     window.addEventListener("resize", function () {
       var w = window.innerWidth;
       var h = window.innerHeight;
@@ -1280,7 +1256,6 @@
       renderer.setSize(w, h);
     });
 
-    // حلقة الرسم
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
