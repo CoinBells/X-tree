@@ -2,37 +2,95 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <title>Oilfield Operator Training – Top-Down</title>
+  <title>Roblox Style Oilfield Training</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
       background:#020617;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont,"Segoe UI",sans-serif;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       color:#f9fafb;
       overflow:hidden;
       direction:rtl;
     }
-
-    #layout {
+    #layout{
       display:flex;
       width:100vw;
       height:100vh;
     }
-
-    #game-wrapper {
+    #game-wrapper{
       flex:1 1 auto;
       position:relative;
       background:#020617;
     }
-
-    #game {
-      width:100%;
-      height:100%;
-      display:block;
+    /* Three.js canvas يأخذ كل المساحة */
+    #three-container{
+      position:absolute;
+      inset:0;
     }
 
-    /* لوحة البيانات */
-    #ui-panel {
+    /* HUD */
+    #hud{
+      position:absolute;
+      top:8px;
+      left:50%;
+      transform:translateX(-50%);
+      background:rgba(15,23,42,.92);
+      border-radius:999px;
+      padding:6px 14px;
+      font-size:11px;
+      border:1px solid rgba(148,163,184,.5);
+      white-space:nowrap;
+      z-index:5;
+    }
+    #hint{
+      position:absolute;
+      bottom:8px;
+      right:8px;
+      background:rgba(15,23,42,.92);
+      border-radius:12px;
+      padding:6px 10px;
+      font-size:11px;
+      border:1px solid rgba(148,163,184,.5);
+      max-width:260px;
+      z-index:5;
+    }
+
+    /* أزرار لمس (ستايل روبلوكس بسيط) */
+    #touch-controls{
+      position:absolute;
+      bottom:14px;
+      left:50%;
+      transform:translateX(-50%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      z-index:6;
+      pointer-events:auto;
+    }
+    .tc-row{display:flex;gap:6px}
+    .tc-btn{
+      width:52px;
+      height:52px;
+      border-radius:12px;
+      border:2px solid #111827;
+      background:linear-gradient(145deg,#111827,#020617);
+      color:#e5e7eb;
+      font-size:22px;
+      box-shadow:0 4px 10px rgba(0,0,0,.9);
+      touch-action:none;
+      cursor:pointer;
+    }
+    .tc-btn:active{
+      background:linear-gradient(145deg,#1d4ed8,#020617);
+    }
+    .tc-btn-small{
+      width:90px;
+      font-size:13px;
+    }
+
+    /* لوحة جانبية – بيانات البئر + bean */
+    #ui-panel{
       width:340px;
       max-width:40vw;
       background:radial-gradient(circle at top,#020617,#020617 60%,#040b1a 100%);
@@ -42,62 +100,43 @@
       padding:14px 12px;
       gap:10px;
     }
-
-    .card {
-      background:rgba(15,23,42,0.95);
+    .card{
+      background:rgba(15,23,42,.95);
       border-radius:14px;
-      border:1px solid rgba(148,163,184,0.4);
+      border:1px solid rgba(148,163,184,.4);
       padding:8px 10px;
       font-size:12px;
     }
-
-    .card h3 {
-      font-size:13px;
-      margin-bottom:6px;
-    }
-
-    .grid2 {
+    .card h3{font-size:13px;margin-bottom:6px}
+    .grid2{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:6px;
     }
-
-    .stat-box {
+    .stat-box{
       background:#020617;
       border-radius:10px;
       border:1px solid #1f2937;
       padding:6px;
     }
-
-    .stat-label {
-      font-size:11px;
-      opacity:0.8;
-    }
-
-    .stat-value {
+    .stat-label{font-size:11px;opacity:.8}
+    .stat-value{
       font-size:16px;
       font-weight:700;
       margin-top:2px;
-      text-shadow:0 0 6px rgba(59,130,246,0.9);
+      text-shadow:0 0 6px rgba(59,130,246,.9);
     }
-
-    .tag {
+    .tag{
       display:inline-block;
       font-size:11px;
       padding:2px 8px;
       border-radius:999px;
       margin-top:4px;
     }
-    .tag-ok { background:rgba(22,163,74,0.18); color:#bbf7d0; border:1px solid #22c55e; }
-    .tag-bad{ background:rgba(248,113,113,0.18); color:#fecaca; border:1px solid #f87171; }
-
-    #well-name {
-      font-weight:600;
-      font-size:14px;
-      margin-bottom:4px;
-    }
-
-    .btn {
+    .tag-ok{background:rgba(22,163,74,.18);color:#bbf7d0;border:1px solid #22c55e}
+    .tag-bad{background:rgba(248,113,113,.18);color:#fecaca;border:1px solid #f87171}
+    #well-name{font-weight:600;font-size:14px;margin-bottom:4px}
+    .btn{
       border-radius:999px;
       border:none;
       padding:7px 10px;
@@ -107,143 +146,58 @@
       margin-top:4px;
       width:100%;
     }
-    #btn-open {
-      background:linear-gradient(90deg,#38bdf8,#6366f1);
-      color:#fff;
-    }
-    #btn-clean {
-      background:linear-gradient(90deg,#22c55e,#a3e635);
-      color:#052e16;
-    }
-    #btn-clean.disabled {
-      filter:grayscale(0.9);
-      opacity:0.6;
-      cursor:default;
-    }
+    #btn-open{background:linear-gradient(90deg,#38bdf8,#6366f1);color:#fff}
+    #btn-clean{background:linear-gradient(90deg,#22c55e,#a3e635);color:#052e16}
+    #btn-clean.disabled{filter:grayscale(.9);opacity:.6;cursor:default}
 
-    #log {
-      font-size:11px;
-      max-height:160px;
-      overflow-y:auto;
-    }
-    #log p { margin-bottom:3px; }
-
-    #hud {
-      position:absolute;
-      top:8px;
-      left:50%;
-      transform:translateX(-50%);
-      background:rgba(15,23,42,0.92);
-      border-radius:999px;
-      padding:6px 14px;
-      font-size:11px;
-      border:1px solid rgba(148,163,184,0.5);
-      white-space:nowrap;
-      z-index:5;
-    }
-
-    #hint {
-      position:absolute;
-      bottom:8px;
-      right:8px;
-      background:rgba(15,23,42,0.92);
-      border-radius:12px;
-      padding:6px 10px;
-      font-size:11px;
-      border:1px solid rgba(148,163,184,0.5);
-      max-width:260px;
-      z-index:5;
-    }
-
-    /* أزرار لمس للموبايل */
-    #touch-controls {
-      position:absolute;
-      bottom:12px;
-      left:12px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-      z-index:6;
-    }
-    .tc-row { display:flex; gap:6px; }
-
-    .tc-btn {
-      width:48px;
-      height:48px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.8);
-      background:rgba(15,23,42,0.95);
-      color:#e5e7eb;
-      font-size:20px;
-      box-shadow:0 4px 10px rgba(0,0,0,0.7);
-      touch-action:none;
-      cursor:pointer;
-    }
-    .tc-btn:active { background:rgba(37,99,235,0.95); }
-
-    .tc-btn-small {
-      width:82px;
-      font-size:12px;
-    }
-
-    /* عرض البين الواقعي */
-    #bean-card {
+    /* bean الواقعي */
+    #bean-card{
       display:flex;
       flex-direction:column;
       align-items:center;
       gap:6px;
     }
-    #bean-title {
-      font-size:13px;
-      font-weight:600;
-      margin-bottom:2px;
-    }
-    #bean-visual {
+    #bean-title{font-size:13px;font-weight:600;margin-bottom:2px}
+    #bean-visual{
       width:140px;
       height:140px;
       border-radius:50%;
       border:5px solid #9ca3af;
-      box-shadow:0 0 15px rgba(0,0,0,0.9) inset;
+      box-shadow:0 0 15px rgba(0,0,0,.9) inset;
       background-color:#020617;
       background-position:center;
       background-size:cover;
       margin:4px auto;
     }
-    .bean-dirty {
-      background-image:url("bean_blockage.jpg");
-    }
-    .bean-clean {
-      background-image:url("bean_clean.jpg");
-    }
-    #bean-note {
+    .bean-dirty{background-image:url("bean_blockage.jpg")}
+    .bean-clean{background-image:url("bean_clean.jpg")}
+    #bean-note{
       font-size:10px;
-      opacity:0.9;
+      opacity:.9;
       text-align:center;
       line-height:1.4;
     }
 
-    @media (max-width:900px) {
-      #ui-panel {
-        width:280px;
-        padding:10px 8px;
-      }
-      #hud { font-size:9px; padding:5px 10px; }
+    #log{font-size:11px;max-height:160px;overflow-y:auto}
+    #log p{margin-bottom:3px}
+
+    @media(max-width:900px){
+      #ui-panel{width:280px;padding:10px 8px}
+      #hud{font-size:9px;padding:5px 10px}
     }
   </style>
 </head>
 <body>
   <div id="layout">
     <div id="game-wrapper">
-      <canvas id="game"></canvas>
+      <div id="three-container"></div>
 
       <div id="hud">
-        كمبيوتر: الأسهم/WASD للحركة – E فحص البئر – C تنظيف. موبايل: استخدم الأسهم وأزرار الفحص والتنظيف.
+        كمبيوتر: W/S للأمام والخلف، A/D للّف – E فحص، C تنظيف. موبايل: الأسهم + أزرار الفحص والتنظيف.
       </div>
       <div id="hint">
-        تحرك في الخريطة، اقترب من أي بئر حتى يظهر تلميح الفحص،
-        ثم اضغط <b>E</b> أو زر <b>فحص</b> لقراءة WHP / FLP وفتح ADJ BEAN.
-        عند الفتح ستظهر صورة البين من الداخل كما في الواقع.
+        عالم 3D بأسلوب Roblox. تحرك في الصحراء، اقترب من بئر، ثم اضغط <b>E</b> أو زر <b>فحص</b>
+        لقراءة WHP/FLP وفتح ADJ BEAN. ستشاهد شكل الـ bean الحقيقي (blockage / clean) في اللوحة الجانبية.
       </div>
 
       <div id="touch-controls">
@@ -292,18 +246,18 @@
         <div id="bean-title">منظر البين من الداخل</div>
         <div id="bean-visual"></div>
         <div id="bean-note">
-          عند فتح ADJ BEAN يعرض هذا الشكل الداخلي للـ bean.<br>
-          إذا كان فيه ترسبات وسوائل يكون Blockage، وبعد التنظيف يظهر المسار نظيف مثل الواقع.
+          عند فتح ADJ BEAN يتم عرض صورة للـ bean من الداخل.<br>
+          إذا كان فيه ترسبات → Blockage. بعد التنظيف يظهر نظيف مثل الصورة الواقعية.
         </div>
       </div>
 
       <div class="card">
         <h3>Training Objectives</h3>
-        <ul style="padding-right:18px; line-height:1.4;">
-          <li>التحرك في الحقل والوصول إلى عدة آبار.</li>
-          <li>قراءة WHP / FLP لكل بئر وتحديد وجود Blockage.</li>
-          <li>فتح ADJ BEAN للبئر الذي فيه Blockage ورؤية البين من الداخل.</li>
-          <li>تنظيف الـ blockage وملاحظة تغيّر قراءات الضغط وشكل البين إلى حالة نظيفة.</li>
+        <ul style="padding-right:18px;line-height:1.4;">
+          <li>التحرك في حقل 3D بأسلوب Roblox والوصول لعدة آبار.</li>
+          <li>قراءة WHP / FLP وتحديد وجود Blockage.</li>
+          <li>رؤية البين الواقعي (مسدود / نظيف) عند فتح ADJ BEAN.</li>
+          <li>تنظيف الـ blockage وملاحظة تغيّر القراءات وشكل البين.</li>
         </ul>
       </div>
 
@@ -314,81 +268,216 @@
     </aside>
   </div>
 
+  <!-- Three.js -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
   <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+    // ====== Three.js Setup (Roblox-style block world) ======
+    const container = document.getElementById("three-container");
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87c8ff);
 
-    function resize() {
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      2000
+    );
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    function onResize() {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
     }
-    window.addEventListener("resize", resize);
-    resize();
+    window.addEventListener("resize", onResize);
 
-    const world = { width: 2200, height: 1400 };
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xe0bb7f, 0.9);
+    scene.add(hemiLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    dirLight.position.set(80, 120, -40);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
 
-    const player = {
-      x: 1100,
-      y: 700,
-      radius: 16,
-      speed: 2.6
-    };
+    // أرضية بلوكية
+    const groundGeo = new THREE.PlaneGeometry(4000, 4000);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0xf0c27b });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
 
-    const wells = [
-      { id:"AH-0117", x:900,  y:620, blockage:true,  cleaned:false },
-      { id:"AH-0216", x:1300, y:540, blockage:false, cleaned:false },
-      { id:"AH-0274", x:700,  y:900, blockage:true,  cleaned:false },
-      { id:"AH-0287", x:1500, y:880, blockage:true,  cleaned:false },
-      { id:"MG-0345", x:1150, y:1050, blockage:false, cleaned:false }
+    // بلاطات مربعة لإحساس Roblox
+    const tileGeo = new THREE.PlaneGeometry(40, 40);
+    const tileMat = new THREE.MeshStandardMaterial({ color: 0xeab676 });
+    for (let x = -400; x <= 400; x += 40) {
+      for (let z = -400; z <= 400; z += 40) {
+        const tile = new THREE.Mesh(tileGeo, tileMat);
+        tile.rotation.x = -Math.PI / 2;
+        tile.position.set(x, 0.01, z);
+        tile.receiveShadow = true;
+        scene.add(tile);
+      }
+    }
+
+    // عامل Roblox-style (body + head + arms)
+    const playerGroup = new THREE.Group();
+
+    const bodyGeo = new THREE.BoxGeometry(8, 10, 4);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffd54f });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.castShadow = true;
+    body.position.y = 8;
+    playerGroup.add(body);
+
+    const headGeo = new THREE.BoxGeometry(6, 6, 6);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffe0b2 });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.castShadow = true;
+    head.position.y = 14;
+    playerGroup.add(head);
+
+    const helmetGeo = new THREE.BoxGeometry(7, 2, 7);
+    const helmetMat = new THREE.MeshStandardMaterial({ color: 0xfb923c });
+    const helmet = new THREE.Mesh(helmetGeo, helmetMat);
+    helmet.castShadow = true;
+    helmet.position.y = 17;
+    playerGroup.add(helmet);
+
+    const legGeo = new THREE.BoxGeometry(3, 8, 3);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8 });
+    const legL = new THREE.Mesh(legGeo, legMat);
+    legL.position.set(-2, 4, 0);
+    const legR = legL.clone();
+    legR.position.x = 2;
+    playerGroup.add(legL, legR);
+
+    playerGroup.position.set(60, 0, -40);
+    scene.add(playerGroup);
+
+    // آبار كبلوكات ثلاثية الأبعاد
+    function createRobloxWell(colorBase) {
+      const g = new THREE.Group();
+
+      const baseGeo = new THREE.BoxGeometry(10, 2, 10);
+      const baseMat = new THREE.MeshStandardMaterial({ color: 0x4b5563 });
+      const base = new THREE.Mesh(baseGeo, baseMat);
+      base.position.y = 1;
+      base.castShadow = true;
+      base.receiveShadow = true;
+      g.add(base);
+
+      const stemGeo = new THREE.BoxGeometry(3, 12, 3);
+      const stemMat = new THREE.MeshStandardMaterial({ color: colorBase });
+      const stem = new THREE.Mesh(stemGeo, stemMat);
+      stem.position.y = 7;
+      stem.castShadow = true;
+      g.add(stem);
+
+      const armGeo = new THREE.BoxGeometry(10, 2, 2);
+      const arm = new THREE.Mesh(armGeo, stemMat);
+      arm.position.set(6.5, 9, 0);
+      arm.castShadow = true;
+      g.add(arm);
+
+      const chokeGeo = new THREE.BoxGeometry(3, 3, 3);
+      const chokeMat = new THREE.MeshStandardMaterial({ color: 0x22c55e });
+      const choke = new THREE.Mesh(chokeGeo, chokeMat);
+      choke.position.set(11, 9, 0);
+      choke.castShadow = true;
+      choke.name = "choke";
+      g.add(choke);
+
+      return g;
+    }
+
+    const wellsData = [
+      { id: "AH-0117", pos: new THREE.Vector3(80, 0, -40), blockage: true, cleaned: false },
+      { id: "AH-0216", pos: new THREE.Vector3(-60, 0, -50), blockage: false, cleaned: false },
+      { id: "AH-0274", pos: new THREE.Vector3(140, 0, 60), blockage: true, cleaned: false },
+      { id: "AH-0287", pos: new THREE.Vector3(-140, 0, 120), blockage: true, cleaned: false },
+      { id: "MG-0345", pos: new THREE.Vector3(40, 0, 150), blockage: false, cleaned: false }
     ];
 
-    let cameraX = 0;
-    let cameraY = 0;
+    wellsData.forEach(w => {
+      const m = createRobloxWell(0x1d4ed8);
+      m.position.copy(w.pos);
+      m.userData.id = w.id;
+      m.userData.blockage = w.blockage;
+      m.userData.cleaned = w.cleaned;
+      scene.add(m);
+      w.mesh = m;
+    });
 
-    const keys = { up:false, down:false, left:false, right:false };
+    // حركة اللاعب (ستايل روبلوكس بسيط)
+    let yaw = 0;
+    const keys = { forward:false, backward:false, left:false, right:false };
 
     window.addEventListener("keydown", e => {
-      if (e.key === "ArrowUp"   || e.key === "w" || e.key === "W") keys.up = true;
-      if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") keys.down = true;
-      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
-      if (e.key === "ArrowRight"|| e.key === "d" || e.key === "D") keys.right = true;
-      if (e.key === "e" || e.key === "E") inspectNearest();
-      if (e.key === "c" || e.key === "C") cleanCurrent();
+      if (e.code === "KeyW" || e.code === "ArrowUp") keys.forward = true;
+      if (e.code === "KeyS" || e.code === "ArrowDown") keys.backward = true;
+      if (e.code === "KeyA" || e.code === "ArrowLeft") keys.left = true;
+      if (e.code === "KeyD" || e.code === "ArrowRight") keys.right = true;
+      if (e.code === "KeyE") inspectNearest();
+      if (e.code === "KeyC") cleanCurrent();
     });
-
     window.addEventListener("keyup", e => {
-      if (e.key === "ArrowUp"   || e.key === "w" || e.key === "W") keys.up = false;
-      if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") keys.down = false;
-      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = false;
-      if (e.key === "ArrowRight"|| e.key === "d" || e.key === "D") keys.right = false;
+      if (e.code === "KeyW" || e.code === "ArrowUp") keys.forward = false;
+      if (e.code === "KeyS" || e.code === "ArrowDown") keys.backward = false;
+      if (e.code === "KeyA" || e.code === "ArrowLeft") keys.left = false;
+      if (e.code === "KeyD" || e.code === "ArrowRight") keys.right = false;
     });
 
-    function bindTouch(btnId, keyName) {
+    function bindTouch(btnId, keyName){
       const btn = document.getElementById(btnId);
       if (!btn) return;
       const start = e => { e.preventDefault(); keys[keyName] = true; };
       const end   = e => { e.preventDefault(); keys[keyName] = false; };
-      btn.addEventListener("touchstart", start, {passive:false});
-      btn.addEventListener("touchend",   end,   {passive:false});
-      btn.addEventListener("touchcancel",end,   {passive:false});
+      btn.addEventListener("touchstart", start,{passive:false});
+      btn.addEventListener("touchend",   end,  {passive:false});
+      btn.addEventListener("touchcancel",end,  {passive:false});
       btn.addEventListener("mousedown",  start);
       window.addEventListener("mouseup", end);
     }
-
-    bindTouch("tc-up","up");
-    bindTouch("tc-down","down");
+    bindTouch("tc-up","forward");
+    bindTouch("tc-down","backward");
     bindTouch("tc-left","left");
     bindTouch("tc-right","right");
 
     document.getElementById("tc-inspect")
-      .addEventListener("click", inspectNearest);
+      .addEventListener("click", () => inspectNearest());
     document.getElementById("tc-inspect")
       .addEventListener("touchstart", e => { e.preventDefault(); inspectNearest(); });
     document.getElementById("tc-clean")
-      .addEventListener("click", cleanCurrent);
+      .addEventListener("click", () => cleanCurrent());
     document.getElementById("tc-clean")
       .addEventListener("touchstart", e => { e.preventDefault(); cleanCurrent(); });
 
+    function updatePlayer(delta){
+      const turnSpeed = 1.8 * delta;
+      const moveSpeed = 40 * delta;
+
+      if (keys.left)  yaw += turnSpeed;
+      if (keys.right) yaw -= turnSpeed;
+
+      const dir = new THREE.Vector3(Math.sin(yaw), 0, -Math.cos(yaw));
+
+      if (keys.forward)  playerGroup.position.addScaledVector(dir, moveSpeed);
+      if (keys.backward) playerGroup.position.addScaledVector(dir, -moveSpeed);
+
+      // كاميرا خلف اللاعب
+      const camOffset = new THREE.Vector3(0, 25, 40);
+      camOffset.applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
+      camera.position.copy(playerGroup.position).add(camOffset);
+      camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0,12,0)));
+    }
+
+    // ====== منطق التدريب / اللوحة الجانبية ======
     const wellNameEl = document.getElementById("well-name");
     const whpEl      = document.getElementById("whp-val");
     const flpEl      = document.getElementById("flp-val");
@@ -402,286 +491,145 @@
 
     let currentWell = null;
 
-    function log(msg) {
-      const p = document.createElement("p");
-      p.textContent = msg;
+    function log(msg){
+      const p=document.createElement("p");
+      p.textContent=msg;
       logEl.prepend(p);
     }
 
-    function calcPressures(well) {
-      if (well.blockage && !well.cleaned) {
+    function calcPressures(well){
+      if (well.userData.blockage && !well.userData.cleaned){
         return {
           whp: 420 + Math.floor(Math.random()*20),
           flp: 120 + Math.floor(Math.random()*15),
           bad: true,
-          text: "Blockage محتمل / مؤكد"
+          text:"Blockage محتمل / مؤكد"
         };
       } else {
         return {
           whp: 260 + Math.floor(Math.random()*15),
           flp: 240 + Math.floor(Math.random()*15),
-          bad: false,
-          text: "تدفق طبيعي"
+          bad:false,
+          text:"تدفق طبيعي"
         };
       }
     }
 
-    function updateBeanVisual(well) {
-      beanVisual.className = "bean-clean bean-dummy"; // reset ثم نعدل
-      beanVisual.className = "bean-clean"; // نحتاج override، لكن سنعدل حسب الحالة
-
-      if (!well) {
-        beanVisual.className = "";
-        beanVisual.id = "bean-visual"; // إعادة الـ id
-        document.getElementById("bean-visual").style.backgroundImage = "none";
-        return;
+    function updateBeanVisual(well){
+      beanVisual.classList.remove("bean-dirty","bean-clean");
+      if (!well) return;
+      if (well.userData.blockage && !well.userData.cleaned){
+        beanVisual.classList.add("bean-dirty");
+      } else {
+        beanVisual.classList.add("bean-clean");
       }
-
-      const el = document.getElementById("bean-visual");
-      el.className = ""; // مسح الكلاسات السابقة
-      el.id = "bean-visual";
-      el.classList.add(well.blockage && !well.cleaned ? "bean-dirty" : "bean-clean");
     }
 
-    function updateUIForWell(well) {
-      if (!well) {
-        wellNameEl.textContent = "لم يتم اختيار بئر";
-        whpEl.textContent = "---";
-        flpEl.textContent = "---";
-        casingEl.textContent = "Closed";
-        stateEl.textContent = "غير مفحوص";
-        stateTag.textContent = "Normal";
-        stateTag.className = "tag tag-ok";
+    function updateUIForWell(well){
+      if (!well){
+        wellNameEl.textContent="لم يتم اختيار بئر";
+        whpEl.textContent="---";
+        flpEl.textContent="---";
+        casingEl.textContent="Closed";
+        stateEl.textContent="غير مفحوص";
+        stateTag.textContent="Normal";
+        stateTag.className="tag tag-ok";
         btnClean.classList.add("disabled");
         updateBeanVisual(null);
         return;
       }
-
       const p = calcPressures(well);
-      wellNameEl.textContent = "بئر " + well.id;
-      whpEl.textContent = p.whp + " psi";
-      flpEl.textContent = p.flp + " psi";
-      casingEl.textContent = "Closed";
-      stateEl.textContent = p.text;
-      if (p.bad) {
-        stateTag.textContent = "Blockage";
-        stateTag.className = "tag tag-bad";
+      wellNameEl.textContent="بئر "+well.userData.id;
+      whpEl.textContent=p.whp+" psi";
+      flpEl.textContent=p.flp+" psi";
+      casingEl.textContent="Closed";
+      stateEl.textContent=p.text;
+      if (p.bad){
+        stateTag.textContent="Blockage";
+        stateTag.className="tag tag-bad";
         btnClean.classList.remove("disabled");
-      } else {
-        stateTag.textContent = "Normal";
-        stateTag.className = "tag tag-ok";
+      }else{
+        stateTag.textContent="Normal";
+        stateTag.className="tag tag-ok";
         btnClean.classList.add("disabled");
       }
       updateBeanVisual(well);
     }
 
-    function getNearestWell() {
-      const maxDist = 80;
-      let best = null;
-      let bestDist = maxDist;
-      for (const w of wells) {
-        const dx = player.x - w.x;
-        const dy = player.y - w.y;
-        const d = Math.hypot(dx, dy);
-        if (d < bestDist) {
-          bestDist = d;
-          best = w;
+    function nearestWell(){
+      let best=null;
+      let bestDist=30; // متر تقريبي في اللعبة
+      const p=playerGroup.position;
+      wellsData.forEach(w=>{
+        const d=p.distanceTo(w.mesh.position);
+        if (d<bestDist){
+          bestDist=d;
+          best=w.mesh;
         }
-      }
+      });
       return best;
     }
 
-    function inspectNearest() {
-      const w = getNearestWell();
-      if (!w) {
-        log("لا يوجد بئر قريب للفحص. اقترب أكثر من أحد الآبار.");
+    function inspectNearest(){
+      const w = nearestWell();
+      if (!w){
+        log("لا يوجد بئر قريب للفحص، اقترب أكثر.");
         return;
       }
       currentWell = w;
-      log("فحص البئر " + w.id + " وفتح ADJ BEAN (عرض البين).");
+      log("فحص البئر "+w.userData.id+" وفتح ADJ BEAN (عرض البين).");
       updateUIForWell(w);
     }
 
-    function cleanCurrent() {
+    function cleanCurrent(){
       if (!currentWell) return;
-      if (!currentWell.blockage || currentWell.cleaned) return;
-      currentWell.cleaned = true;
-      log("تم تنظيف الـ blockage من ADJ BEAN للبئر " + currentWell.id + " – البين أصبح نظيف.");
+      if (!currentWell.userData.blockage || currentWell.userData.cleaned) return;
+      currentWell.userData.cleaned = true;
+      log("تم تنظيف الـ blockage من ADJ BEAN للبئر "+currentWell.userData.id+" – البين أصبح نظيف.");
       updateUIForWell(currentWell);
+      const choke = currentWell.getObjectByName("choke");
+      if (choke) choke.material.color.set(0x22c55e);
     }
 
-    btnOpen.addEventListener("click", () => {
-      if (!currentWell) {
-        inspectNearest();
-        return;
-      }
+    btnOpen.addEventListener("click",()=>{
+      if (!currentWell){inspectNearest();return;}
       const p = calcPressures(currentWell);
-      whpEl.textContent = p.whp + " psi";
-      flpEl.textContent = p.flp + " psi";
-      stateEl.textContent = p.text;
-      if (p.bad) {
-        stateTag.textContent = "Blockage";
-        stateTag.className = "tag tag-bad";
+      whpEl.textContent=p.whp+" psi";
+      flpEl.textContent=p.flp+" psi";
+      stateEl.textContent=p.text;
+      if (p.bad){
+        stateTag.textContent="Blockage";
+        stateTag.className="tag tag-bad";
         btnClean.classList.remove("disabled");
-        log("قراءة WHP/FLP للبئر " + currentWell.id + " تشير إلى Blockage – انظر للبين على اليمين.");
+        log("قراءة WHP/FLP للبئر "+currentWell.userData.id+" تشير إلى Blockage – شاهد البين على اليمين.");
       } else {
-        stateTag.textContent = "Normal";
-        stateTag.className = "tag tag-ok";
+        stateTag.textContent="Normal";
+        stateTag.className="tag tag-ok";
         btnClean.classList.add("disabled");
-        log("قراءة WHP/FLP للبئر " + currentWell.id + " طبيعية – البين نظيف.");
+        log("قراءة WHP/FLP للبئر "+currentWell.userData.id+" طبيعية – البين نظيف.");
       }
       updateBeanVisual(currentWell);
     });
+    btnClean.addEventListener("click",cleanCurrent);
 
-    btnClean.addEventListener("click", cleanCurrent);
+    document.getElementById("tc-inspect")
+      .addEventListener("touchstart",e=>{e.preventDefault();inspectNearest();});
+    document.getElementById("tc-clean")
+      .addEventListener("touchstart",e=>{e.preventDefault();cleanCurrent();});
 
-    log("تحرك في الخريطة، اقترب من بئر، افحصه، وراقب شكل البين (blockage / نظيف) في اللوحة الجانبية.");
+    log("تحرك في العالم 3D بأسلوب Roblox، اقترب من الآبار، افحص الـ ADJ BEAN ونظّف الـ blockage.");
 
-    function update() {
-      let dx = 0, dy = 0;
-      if (keys.up) dy -= 1;
-      if (keys.down) dy += 1;
-      if (keys.left) dx -= 1;
-      if (keys.right) dx += 1;
-
-      if (dx !== 0 || dy !== 0) {
-        const len = Math.hypot(dx, dy);
-        dx /= len;
-        dy /= len;
-        player.x += dx * player.speed;
-        player.y += dy * player.speed;
-      }
-
-      player.x = Math.max(player.radius, Math.min(world.width - player.radius, player.x));
-      player.y = Math.max(player.radius, Math.min(world.height - player.radius, player.y));
-
-      cameraX = player.x - canvas.width/2;
-      cameraY = player.y - canvas.height/2;
-      cameraX = Math.max(0, Math.min(world.width - canvas.width, cameraX));
-      cameraY = Math.max(0, Math.min(world.height - canvas.height, cameraY));
+    // Loop
+    let last = performance.now();
+    function animate(now){
+      const delta = (now-last)/1000;
+      last = now;
+      updatePlayer(delta);
+      renderer.render(scene,camera);
+      requestAnimationFrame(animate);
     }
-
-    function drawBackground() {
-      const g = ctx.createLinearGradient(0,0,0,canvas.height);
-      g.addColorStop(0,   "#7cc3ff");
-      g.addColorStop(0.35,"#cde9ff");
-      g.addColorStop(0.36,"#f7d9a0");
-      g.addColorStop(1,   "#f0c27b");
-      ctx.fillStyle = g;
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-
-      ctx.strokeStyle = "rgba(15,23,42,0.3)";
-      ctx.lineWidth = 1;
-      for (let x=-cameraX % 120; x<canvas.width; x+=120) {
-        const y1 = world.height*0.3 - cameraY;
-        const y2 = y1 + 16;
-        ctx.beginPath();
-        ctx.moveTo(x,y1);
-        ctx.lineTo(x,y2);
-        ctx.stroke();
-      }
-
-      ctx.strokeStyle = "rgba(30,64,175,0.35)";
-      ctx.lineWidth = 3;
-      wells.forEach(w => {
-        const sx = w.x - cameraX;
-        const sy = w.y - cameraY;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx + 80, sy + 6);
-        ctx.stroke();
-      });
-    }
-
-    function drawPlayer() {
-      const sx = player.x - cameraX;
-      const sy = player.y - cameraY;
-
-      ctx.fillStyle = "rgba(0,0,0,0.28)";
-      ctx.beginPath();
-      ctx.ellipse(sx, sy+10, player.radius*0.9, player.radius*0.5, 0, 0, Math.PI*2);
-      ctx.fill();
-
-      ctx.fillStyle = "#facc15";
-      ctx.beginPath();
-      ctx.arc(sx, sy, player.radius, 0, Math.PI*2);
-      ctx.fill();
-      ctx.strokeStyle = "#92400e";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      ctx.fillStyle = "#fb923c";
-      ctx.beginPath();
-      ctx.arc(sx, sy-4, player.radius*0.8, Math.PI, 0);
-      ctx.fill();
-      ctx.strokeStyle = "#9a3412";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-
-    function drawWells() {
-      wells.forEach(w => {
-        const sx = w.x - cameraX;
-        const sy = w.y - cameraY;
-        if (sx < -60 || sx > canvas.width+60 ||
-            sy < -60 || sy > canvas.height+60) return;
-
-        ctx.fillStyle = "#374151";
-        ctx.beginPath();
-        ctx.arc(sx, sy, 18, 0, Math.PI*2);
-        ctx.fill();
-
-        ctx.fillStyle = "#1d4ed8";
-        ctx.fillRect(sx-5, sy-32, 10, 26);
-        ctx.fillRect(sx-18, sy-20, 36, 8);
-
-        ctx.fillStyle = (w.blockage && !w.cleaned) ? "#f97373" : "#4ade80";
-        ctx.fillRect(sx+20, sy-24, 16, 16);
-
-        ctx.strokeStyle = "#eff6ff";
-        ctx.lineWidth = 1.3;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 22, 0, Math.PI*2);
-        ctx.stroke();
-
-        ctx.fillStyle = "rgba(15,23,42,0.9)";
-        ctx.beginPath();
-        ctx.roundRect(sx-34, sy-52, 68, 18, 9);
-        ctx.fill();
-        ctx.fillStyle = "#e5e7eb";
-        ctx.font = "10px system-ui";
-        ctx.textAlign = "center";
-        ctx.fillText(w.id, sx, sy-39);
-        ctx.textAlign = "start";
-      });
-    }
-
-    function drawNearHint() {
-      const w = getNearestWell();
-      if (!w) return;
-      const sx = w.x - cameraX;
-      const sy = w.y - cameraY - 60;
-      ctx.fillStyle = "rgba(15,23,42,0.95)";
-      ctx.beginPath();
-      ctx.roundRect(sx-70, sy-16, 140, 22, 10);
-      ctx.fill();
-      ctx.fillStyle = "#e5e7eb";
-      ctx.font = "11px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText("اضغط E لفحص البئر", sx, sy+1);
-      ctx.textAlign = "start";
-    }
-
-    function loop() {
-      update();
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      drawBackground();
-      drawWells();
-      drawPlayer();
-      drawNearHint();
-      requestAnimationFrame(loop);
-    }
-    loop();
+    onResize();
+    requestAnimationFrame(animate);
   </script>
 </body>
 </html>
