@@ -122,6 +122,44 @@
     }
     #log-box h4{font-size:11px;margin-bottom:4px;}
     #log p{margin-bottom:2px;}
+
+    /* أزرار اللمس للموبايل */
+    #touch-controls{
+      position:fixed;
+      bottom:18px;
+      right:50%;
+      transform:translateX(50%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      z-index:6;
+      pointer-events:auto;
+    }
+    .tc-row{
+      display:flex;
+      gap:6px;
+    }
+    .tc-btn{
+      width:44px;
+      height:44px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.7);
+      background:rgba(15,23,42,.9);
+      color:#e5e7eb;
+      font-size:18px;
+      cursor:pointer;
+      box-shadow:0 4px 10px rgba(0,0,0,.7);
+      touch-action:none;
+    }
+    .tc-btn:active{
+      background:rgba(37,99,235,.9);
+    }
+    .tc-btn-small{
+      width:72px;
+      font-size:11px;
+    }
+
     @media(max-width:900px){
       #hud{font-size:9px;padding:5px 10px;}
       #hint{max-width:210px;}
@@ -131,14 +169,30 @@
 </head>
 <body>
   <div id="hud">
-    التحكّم: W/A/S/D للمشي – الماوس لتغيير الاتجاه – E لفحص البئر – C لتنظيف الـ blockage بعد الفتح
+    تحكّم الكمبيوتر: W/A/S/D للمشي – الماوس لتغيير الاتجاه – E فحص – C تنظيف. على الجوال استخدم أزرار اللمس بالأسفل.
   </div>
   <div id="hint">
-    أنت عامل يتحرك في حقل نفطي 3D. امشِ بين الآبار، اقترب من أي بئر حتى يظهر تلميح الفحص، ثم اضغط <b>E</b> لقراءة WHP/FLP وفتح ADJ BEAN.
+    تحرك في الحقل، اقترب من الآبار، ثم استخدم زر <b>E فحص</b> لعرض WHP/FLP وفتح ADJ BEAN، وزر <b>C تنظيف</b> لإزالة الـ blockage.
   </div>
   <div id="log-box">
     <h4>Log</h4>
     <div id="log"></div>
+  </div>
+
+  <!-- أزرار لمس للحركة والفحص -->
+  <div id="touch-controls">
+    <div class="tc-row">
+      <button id="tc-up" class="tc-btn">↑</button>
+    </div>
+    <div class="tc-row">
+      <button id="tc-left" class="tc-btn">←</button>
+      <button id="tc-down" class="tc-btn">↓</button>
+      <button id="tc-right" class="tc-btn">→</button>
+    </div>
+    <div class="tc-row">
+      <button id="tc-inspect" class="tc-btn tc-btn-small">E فحص</button>
+      <button id="tc-clean" class="tc-btn tc-btn-small">C تنظيف</button>
+    </div>
   </div>
 
   <div id="inspect-panel">
@@ -177,7 +231,6 @@
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 
   <script>
-    // ===== basic setup =====
     const logEl = document.getElementById("log");
     function log(msg){
       const p=document.createElement("p");
@@ -200,7 +253,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // ===== lights =====
     const hemiLight = new THREE.HemisphereLight(0xffffff,0xe0bb7f,0.8);
     scene.add(hemiLight);
     const dirLight = new THREE.DirectionalLight(0xffffff,0.8);
@@ -208,7 +260,6 @@
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    // ===== ground (desert) =====
     const groundGeo = new THREE.PlaneGeometry(4000,4000,1,1);
     const groundMat = new THREE.MeshStandardMaterial({color:0xf0c27b});
     const ground = new THREE.Mesh(groundGeo,groundMat);
@@ -216,34 +267,29 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // ===== player (عامل بسيط) =====
+    // worker
     const workerGroup = new THREE.Group();
-
     const bodyGeo = new THREE.BoxGeometry(2,4,1.3);
     const bodyMat = new THREE.MeshStandardMaterial({color:0xffd54f});
     const body = new THREE.Mesh(bodyGeo,bodyMat);
     body.position.y = 3;
     workerGroup.add(body);
-
     const headGeo = new THREE.BoxGeometry(2,1.4,1.3);
     const headMat = new THREE.MeshStandardMaterial({color:0xffe9a9});
     const head = new THREE.Mesh(headGeo,headMat);
     head.position.y = 4.8;
     workerGroup.add(head);
-
     const helmetGeo = new THREE.BoxGeometry(2.3,0.8,1.6);
     const helmetMat = new THREE.MeshStandardMaterial({color:0xff9800});
     const helmet = new THREE.Mesh(helmetGeo,helmetMat);
     helmet.position.y = 5.4;
     workerGroup.add(helmet);
-
     workerGroup.position.set(0,0,0);
     scene.add(workerGroup);
 
-    // ===== wells (X-tree مبسط) =====
+    // wells
     function createWell(colorBase) {
       const well = new THREE.Group();
-
       const baseGeo = new THREE.CylinderGeometry(2,2,1,16);
       const baseMat = new THREE.MeshStandardMaterial({color:0x4b5563});
       const base = new THREE.Mesh(baseGeo,baseMat);
@@ -301,7 +347,7 @@
       w.mesh = wellMesh;
     });
 
-    // ===== camera third-person =====
+    // camera + movement
     let yaw = 0;
     let pitch = 0;
     const keys = {w:false,a:false,s:false,d:false};
@@ -348,7 +394,6 @@
       }
       workerGroup.position.y = 0;
 
-      // camera behind player
       const camOffset = new THREE.Vector3(0,10,20);
       const rot = new THREE.Matrix4().makeRotationY(yaw);
       camOffset.applyMatrix4(rot);
@@ -356,7 +401,7 @@
       camera.lookAt(workerGroup.position.clone().add(new THREE.Vector3(0,4,0)));
     }
 
-    // ===== inspection HUD =====
+    // HUD logic
     const panel = document.getElementById("inspect-panel");
     const wellNameEl = document.getElementById("well-name");
     const whpEl = document.getElementById("whp-val");
@@ -474,15 +519,37 @@
     btnClean.addEventListener("click",cleanCurrent);
     btnClose.addEventListener("click",hidePanel);
 
-    // أول رسالة
-    log("تحرك باستخدام W/A/S/D، حرّك الكاميرا بالماوس، اقترب من بئر واضغط E للفحص.");
+    log("كمبيوتر: W/A/S/D + ماوس. موبايل: استخدم الأسهم أسفل الشاشة للحركة وأزرار E/C للفحص والتنظيف.");
 
-    // ===== animation loop =====
+    // touch controls → تعدّل نفس مفاتيح الحركة keys.w/a/s/d
+    function bindTouch(btnId, keyProp){
+      const btn = document.getElementById(btnId);
+      if(!btn) return;
+      const start = (e)=>{ e.preventDefault(); keys[keyProp] = true; };
+      const end   = (e)=>{ e.preventDefault(); keys[keyProp] = false; };
+      btn.addEventListener("touchstart", start, {passive:false});
+      btn.addEventListener("touchend", end, {passive:false});
+      btn.addEventListener("touchcancel", end, {passive:false});
+      // دعم الضغط بالموس للكمبيوتر أيضاً
+      btn.addEventListener("mousedown", start);
+      window.addEventListener("mouseup", end);
+    }
+    bindTouch("tc-up","w");
+    bindTouch("tc-down","s");
+    bindTouch("tc-left","a");
+    bindTouch("tc-right","d");
+
+    document.getElementById("tc-inspect").addEventListener("touchstart", e=>{e.preventDefault();inspectNearest();});
+    document.getElementById("tc-clean").addEventListener("touchstart", e=>{e.preventDefault();cleanCurrent();});
+    // للكمبيوتر بالماوس
+    document.getElementById("tc-inspect").addEventListener("click", inspectNearest);
+    document.getElementById("tc-clean").addEventListener("click", cleanCurrent);
+
+    // animation
     let last = performance.now();
     function animate(now){
       const delta = (now - last)/1000;
       last = now;
-
       updatePlayer(delta);
       renderer.render(scene,camera);
       requestAnimationFrame(animate);
