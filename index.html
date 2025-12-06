@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <title>🛢️ KOC X-Tree Training — Realistic 3D</title>
+  <title>🛢️ KOC X-Tree Training — 3D</title>
   <style>
     * { box-sizing: border-box; direction: rtl; }
     html, body {
@@ -99,7 +99,6 @@
       font-weight: 600;
       font-size: 13px;
     }
-    #completeOverlay button:hover { background: #3f9144; }
 
     #debugMsg {
       position: fixed;
@@ -114,6 +113,38 @@
       display: none;
     }
 
+    /* أزرار تحريك العامل */
+    #moveControls {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+    #moveControls-row {
+      display: flex;
+      gap: 6px;
+    }
+    .mvBtn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(15, 20, 40, 0.95);
+      color: #fff;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .mvBtn:active { background: rgba(40, 80, 160, 0.95); }
+
     @media (max-width: 600px) {
       #hud { left: 10px; width: auto; }
       #hud h1 { font-size: 14px; }
@@ -122,14 +153,16 @@
 </head>
 <body>
   <div id="hud">
-    <h1>🛢️ KOC X-Tree Training — 3D واقعي</h1>
-    <p><small>محاكاة واقعية لشجرة البئر والـ Hook-Up لتدريب الفيلد أوبريتر على WHP / FLP / Choke / Drain Sample.</small></p>
+    <h1>🛢️ KOC X-Tree Training — 3D</h1>
+    <p><small>
+      X-Tree + Hook-Up + Manifold (6") لتدريب الفيلد أوبريتر على التعامل مع الـ Choke والـ Blockage والـ Drain Sample.
+    </small></p>
     <p id="objectiveText"></p>
     <ul id="steps">
       <li id="step1" class="active">1- قراءة WHP &amp; FLP من شاشة القياسات</li>
-      <li id="step2" class="pending">2- إغلاق صمام Upstream قبل الشغل</li>
-      <li id="step3" class="pending">3- فتح وفحص الـ ADJ BEAN ورؤية السبول</li>
-      <li id="step4" class="pending">4- تنظيف السبول وأخذ Drain Sample من خط الـ Hook-Up</li>
+      <li id="step2" class="pending">2- تحريك العامل للبئر وإغلاق صمام Upstream</li>
+      <li id="step3" class="pending">3- فتح الـ ADJ BEAN لرؤية السبول والـ Blockage</li>
+      <li id="step4" class="pending">4- تنظيف السبول وأخذ Drain Sample من الخط 6"</li>
     </ul>
 
     <div id="gaugesPanel">
@@ -140,22 +173,30 @@
 
     <div id="statusBar"></div>
     <div id="hint">
-      اسحب بإصبعك لتدوير الكاميرا، قرّب/أبعد بإصبعين (Zoom)، واضغط على:
-      صمام الجناح الأخضر (Upstream)، بلوك الـ ADJ BEAN الأزرق، وصمام Drain Sample.
+      حرّك العامل بالأسهم في الأسفل، وقرّبه من X-Tree أو Hook-Up أو Manifold ثم اضغط على الصمامات والـ Choke والـ Drain Sample للتفاعل.
+    </div>
+  </div>
+
+  <div id="moveControls">
+    <button class="mvBtn" onclick="moveOperator('forward')">↑</button>
+    <div id="moveControls-row">
+      <button class="mvBtn" onclick="moveOperator('left')">←</button>
+      <button class="mvBtn" onclick="moveOperator('back')">↓</button>
+      <button class="mvBtn" onclick="moveOperator('right')">→</button>
     </div>
   </div>
 
   <div id="completeOverlay">
     <div class="box">
       <h2>✅ التدريب اكتمل بنجاح</h2>
-      <p>فتحت الـ ADJ BEAN، شفت السبول والـ Blockage، نظّفته وأخذت Drain Sample بأمان.</p>
+      <p>العامل نفّذ إجراءات البئر: تشخيص Blockage على الـ Choke في الـ Hook-Up، تنظيف السبول، وأخذ Drain Sample من خط 6" إلى الـ Manifold.</p>
       <button onclick="restartTraining()">إعادة التجربة</button>
     </div>
   </div>
 
   <div id="debugMsg"></div>
 
-  <!-- Three.js نسخة تدعم OrbitControls كـ global -->
+  <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/examples/js/controls/OrbitControls.js"></script>
 
@@ -164,18 +205,17 @@
     let raycaster, pointer;
     const interactiveObjects = [];
 
+    let operator; // العامل
     let gameStep = 0;
     let whp = 360;
     let flp = 35;
     let casingPressure = 0;
 
-    let blockageCleared = false; // بعد تنظيف السبول
+    let blockageCleared = false;
     let upstreamClosed = false;
     let sampleTaken   = false;
+    let chokeOpened   = false;
 
-    let chokeOpened   = false;   // فتح جسم الـ ADJ BEAN لرؤية السبول
-
-    // مجسمات السبول (inspection)
     let spoolOuter, spoolInnerDirty, spoolInnerClean;
 
     const objectiveText   = document.getElementById("objectiveText");
@@ -198,7 +238,7 @@
       switch (gameStep) {
         case 0:
           objectiveText.textContent =
-            "ابدأ بقراءة WHP و FLP من شاشة القياسات لتشخيص وجود Blockage على الـ Choke.";
+            "ابدأ بقراءة WHP و FLP من شاشة القياسات لتشخيص احتمال Blockage على الـ Choke.";
           setStepState(1, "active");
           setStepState(2, "pending");
           setStepState(3, "pending");
@@ -206,30 +246,30 @@
           break;
         case 1:
           objectiveText.textContent =
-            "أغلق صمام Upstream (الجناح الأخضر على اليمين) قبل التعامل مع الـ ADJ BEAN.";
+            "حرّك العامل بالقرب من X-Tree ثم اضغط على صمام Upstream (Primary Wing Valve الأزرق).";
           setStepState(1, "done");
           setStepState(2, "active");
           break;
         case 2:
           objectiveText.textContent =
-            "اضغط على بلوك الـ ADJ BEAN الأزرق لفتحه ورؤية السبول من الداخل (مع الـ Blockage).";
+            "وجّه العامل للـ Hook-Up واضغط على بلوك الـ ADJ BEAN (Choke) لفتحها ورؤية السبول المتسخ.";
           setStepState(2, "done");
           setStepState(3, "active");
           break;
         case 3:
           objectiveText.textContent =
-            "اضغط مرة أخرى على الـ ADJ BEAN لتنظيف السبول (إزالة الـ Blockage) ثم خذ Drain Sample.";
+            "اضغط مرة ثانية على الـ ADJ BEAN لتنظيف السبول (إزالة الـ Blockage) ثم توجّه إلى Drain Sample على خط 6\".";
           setStepState(3, "active");
           break;
         case 4:
           objectiveText.textContent =
-            "اضغط على صمام Drain Sample في خط الـ Hook-Up لأخذ العينة وإنهاء التدريب.";
+            "قرّب العامل من صمام Drain Sample على خط 6\" واضغط عليه لأخذ العينة وإنهاء التدريب.";
           setStepState(3, "done");
           setStepState(4, "active");
           break;
         case 5:
           objectiveText.textContent =
-            "التدريب مكتمل، يمكنك إعادة التجربة أو استكشاف الـ X-Tree في وضع حر.";
+            "التدريب مكتمل، تقدر تعيد أو تستكشف X-Tree والخط إلى الـ Manifold بحرية.";
           setStepState(4, "done");
           break;
       }
@@ -259,7 +299,7 @@
       gameStep = 5;
       updateObjective();
       completeOverlay.style.display = "flex";
-      setStatus("اكتمل التدريب. ممتاز.", "#9effc0");
+      setStatus("اكتمل سيناريو التدريب.", "#9effc0");
     }
 
     function restartTraining() {
@@ -273,15 +313,18 @@
       sampleTaken = false;
       chokeOpened = false;
 
-      // ألوان إعادة ضبط
       interactiveObjects.forEach(obj => {
-        if (obj.userData.type === "upstream") obj.material.color.set(0x00b894); // أخضر
-        if (obj.userData.type === "chokeBlock")    obj.material.color.set(0x124d92); // أزرق
+        if (obj.userData.type === "upstream") obj.material.color.set(0x1e88e5);
+        if (obj.userData.type === "chokeBlock")    obj.material.color.set(0x1565c0);
       });
 
       if (spoolOuter) spoolOuter.visible = false;
       if (spoolInnerDirty) spoolInnerDirty.visible = false;
       if (spoolInnerClean) spoolInnerClean.visible = false;
+
+      if (operator) {
+        operator.position.set(-5, 0, 2);
+      }
 
       updateObjective();
       updateGaugesText();
@@ -296,13 +339,39 @@
         updateObjective();
       } else {
         updateGaugesText();
-        setStatus("تم تحديث قراءة القياسات.", "#9effc0");
+        setStatus("تم تحديث القراءة.", "#9effc0");
       }
     });
 
+    // تحريك العامل من الأزرار
+    function moveOperator(dir) {
+      if (!operator) return;
+      const step = 0.7;
+      if (dir === "left")  operator.position.x -= step;
+      if (dir === "right") operator.position.x += step;
+      if (dir === "forward") operator.position.z -= step;
+      if (dir === "back")    operator.position.z += step;
+      clampOperator();
+    }
+    window.moveOperator = moveOperator; // عشان تشتغل مع onClick
+
+    function clampOperator() {
+      if (!operator) return;
+      operator.position.x = Math.max(-7, Math.min(18, operator.position.x));
+      operator.position.z = Math.max(-4, Math.min(4, operator.position.z));
+    }
+
+    function isOperatorNear(obj, maxDist) {
+      if (!operator) return true;
+      const worldPos = new THREE.Vector3();
+      obj.getWorldPosition(worldPos);
+      const dist = operator.position.distanceTo(worldPos);
+      return dist <= (maxDist || 2.5);
+    }
+
     function initScene() {
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xb9e4ff);
+      scene.background = new THREE.Color(0xbfd7ff);
 
       camera = new THREE.PerspectiveCamera(
         60,
@@ -310,21 +379,18 @@
         0.1,
         200
       );
-      camera.position.set(10, 7, 15);
+      camera.position.set(10, 7, 18);
 
       renderer = new THREE.WebGLRenderer({ antialias: false });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio * 0.8, 1.6));
       document.body.appendChild(renderer.domElement);
-      renderer.domElement.style.position = "fixed";
-      renderer.domElement.style.inset = "0";
-      renderer.domElement.style.zIndex = "0";
 
       controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.target.set(0, 3.2, 0);
+      controls.target.set(4, 3.0, 0);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
-      controls.minDistance = 7;
+      controls.minDistance = 10;
       controls.maxDistance = 35;
       controls.maxPolarAngle = Math.PI / 2.1;
       controls.update();
@@ -337,40 +403,35 @@
       sun.position.set(25, 35, 10);
       scene.add(sun);
 
-      // أرضية صحراوية
-      const groundGeo = new THREE.PlaneGeometry(120, 120, 32, 32);
+      // أرضية
+      const groundGeo = new THREE.PlaneGeometry(160, 100);
       const groundMat = new THREE.MeshStandardMaterial({
-        color: 0xd8be8e,
-        roughness: 0.95,
-        metalness: 0.0
+        color: 0xd8c79a,
+        roughness: 0.95
       });
       const ground = new THREE.Mesh(groundGeo, groundMat);
       ground.rotation.x = -Math.PI / 2;
       ground.position.y = 0;
       scene.add(ground);
 
-      // تلال بسيطة
-      for (let i = 0; i < 18; i++) {
-        const hillGeo = new THREE.ConeGeometry(
-          0.8 + Math.random() * 1.8,
-          0.7 + Math.random() * 1.3,
-          6
-        );
+      // بعض التلال
+      for (let i = 0; i < 16; i++) {
+        const hillGeo = new THREE.ConeGeometry(1.0, 0.8, 6);
         const hillMat = new THREE.MeshStandardMaterial({
           color: 0xcfa471,
           roughness: 1.0
         });
         const hill = new THREE.Mesh(hillGeo, hillMat);
         hill.position.set(
-          (Math.random() - 0.5) * 80,
-          0.45,
-          (Math.random() - 0.5) * 80
+          (Math.random() - 0.2) * 70,
+          0.4,
+          (Math.random() - 0.5) * 40
         );
         hill.rotation.y = Math.random() * Math.PI;
         scene.add(hill);
       }
 
-      // منصة
+      // منصة البئر
       const padGeo = new THREE.BoxGeometry(10, 0.4, 10);
       const padMat = new THREE.MeshStandardMaterial({
         color: 0x9c9c9c,
@@ -381,152 +442,129 @@
       pad.position.set(0, 0.2, 0);
       scene.add(pad);
 
-      // قاعدة الشجرة
-      const baseGeo = new THREE.CylinderGeometry(1.2, 1.4, 0.6, 16);
+      // X-TREE (ألوان زرقاء مثل الصورة)
+      const bluePipeMat = new THREE.MeshStandardMaterial({
+        color: 0x1e88e5,
+        metalness: 0.7,
+        roughness: 0.3
+      });
+      const blueDarkMat = new THREE.MeshStandardMaterial({
+        color: 0x0d47a1,
+        metalness: 0.7,
+        roughness: 0.3
+      });
+
+      // قاعدة
+      const baseGeo = new THREE.CylinderGeometry(1.2, 1.4, 0.6, 20);
       const baseMat = new THREE.MeshStandardMaterial({
-        color: 0x5b6067,
+        color: 0x546e7a,
         metalness: 0.5,
-        roughness: 0.4
+        roughness: 0.5
       });
       const base = new THREE.Mesh(baseGeo, baseMat);
       base.position.set(0, 0.7, 0);
       scene.add(base);
 
       // أنبوب رأسي
-      const vertGeo = new THREE.CylinderGeometry(0.35, 0.35, 4.8, 18);
-      const vertMat = new THREE.MeshStandardMaterial({
-        color: 0x9b9b9b,
-        metalness: 0.55,
-        roughness: 0.35
-      });
-      const vertPipe = new THREE.Mesh(vertGeo, vertMat);
+      const vertGeo = new THREE.CylinderGeometry(0.35, 0.35, 4.8, 20);
+      const vertPipe = new THREE.Mesh(vertGeo, bluePipeMat);
       vertPipe.position.set(0, 3.1, 0);
       scene.add(vertPipe);
 
-      // Swab cap أعلى مثل الصورة
-      const swabBodyGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.5, 16);
-      const swabBodyMat = new THREE.MeshStandardMaterial({
-        color: 0xb0b0b0,
-        metalness: 0.7,
-        roughness: 0.2
-      });
-      const swabBody = new THREE.Mesh(swabBodyGeo, swabBodyMat);
-      swabBody.position.set(0, 5.0, 0);
-      scene.add(swabBody);
+      // تدرجات T-Cap + Swab + Gauge تقريبية
+      const swab1Geo = new THREE.CylinderGeometry(0.32, 0.32, 0.5, 16);
+      const swab1 = new THREE.Mesh(swab1Geo, bluePipeMat);
+      swab1.position.set(0, 4.9, 0);
+      scene.add(swab1);
 
-      const swabCapGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.25, 16);
-      const swabCap = new THREE.Mesh(swabCapGeo, swabBodyMat);
-      swabCap.position.set(0, 5.3, 0);
-      scene.add(swabCap);
+      const swab2Geo = new THREE.CylinderGeometry(0.26, 0.26, 0.4, 16);
+      const swab2 = new THREE.Mesh(swab2Geo, bluePipeMat);
+      swab2.position.set(0, 5.4, 0);
+      scene.add(swab2);
 
-      // مادة صدأ
-      const rustMat = new THREE.MeshStandardMaterial({
-        color: 0x8a4c2c,
+      const gaugeGeo = new THREE.SphereGeometry(0.18, 12, 12);
+      const gaugeMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
         metalness: 0.3,
-        roughness: 0.85
+        roughness: 0.3
       });
+      const gauge = new THREE.Mesh(gaugeGeo, gaugeMat);
+      gauge.position.set(0, 5.9, 0);
+      scene.add(gauge);
 
-      // صمام + هاند ويل
-      function createRustValve(y, xOffset, options = {}) {
+      // handwheel function
+      function createWheel(y, xOffset) {
         const group = new THREE.Group();
 
-        const valveBodyGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.5, 18);
-        const valveBody = new THREE.Mesh(valveBodyGeo, rustMat);
-        valveBody.position.set(xOffset, y, 0);
-        valveBody.rotation.z = Math.PI / 2;
-        group.add(valveBody);
+        const bodyGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.5, 20);
+        const body = new THREE.Mesh(bodyGeo, bluePipeMat);
+        body.position.set(xOffset, y, 0);
+        body.rotation.z = Math.PI / 2;
+        group.add(body);
 
-        const wheelGeo = new THREE.TorusGeometry(
-          options.radius || 0.9,
-          0.09,
-          14,
-          26
-        );
-        const wheel = new THREE.Mesh(wheelGeo, rustMat);
+        const wheelGeo = new THREE.TorusGeometry(0.9, 0.09, 16, 28);
+        const wheel = new THREE.Mesh(wheelGeo, blueDarkMat);
         wheel.position.set(xOffset, y, 0);
         wheel.rotation.x = Math.PI / 2;
         group.add(wheel);
 
         const stemGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.7, 12);
-        const stem = new THREE.Mesh(stemGeo, rustMat);
+        const stem = new THREE.Mesh(stemGeo, bluePipeMat);
         stem.position.set(xOffset, y + 0.55, 0);
         group.add(stem);
 
         scene.add(group);
-        return { group, wheel, valveBody };
       }
 
-      // 3 master valves رأسية مثل الصورة
-      createRustValve(4.2, 0, { radius: 1.0 }); // upper
-      createRustValve(3.1, 0, { radius: 1.0 }); // middle
-      createRustValve(2.0, 0, { radius: 1.0 }); // lower
+      // Upper / Middle / Lower Master
+      createWheel(4.2, 0);
+      createWheel(3.1, 0);
+      createWheel(2.0, 0);
 
-      // أذرع جانبية رئيسية
-      const armGeo = new THREE.CylinderGeometry(0.26, 0.26, 3.6, 18);
-      const armMat = new THREE.MeshStandardMaterial({
-        color: 0xb3b3b3,
-        metalness: 0.6,
-        roughness: 0.3
-      });
+      // الأذرع الجانبية
+      const armGeo = new THREE.CylinderGeometry(0.26, 0.26, 3.8, 20);
+      const arm = new THREE.Mesh(armGeo, bluePipeMat);
+      arm.rotation.z = Math.PI / 2;
+      arm.position.set(0, 3.1, 0);
+      scene.add(arm);
 
-      const leftArm = new THREE.Mesh(armGeo, armMat);
-      leftArm.rotation.z = Math.PI / 2;
-      leftArm.position.set(-1.9, 3.1, 0);
-      scene.add(leftArm);
+      // Kill Wing Valve يسار (غير تفاعلي)
+      createWheel(3.1, -3.3);
 
-      const rightArm = new THREE.Mesh(armGeo, armMat);
-      rightArm.rotation.z = Math.PI / 2;
-      rightArm.position.set(1.9, 3.1, 0);
-      scene.add(rightArm);
-
-      // صمام جانبي يسار مثل الصورة
-      createRustValve(3.1, -3.3, { radius: 1.0 });
-
-      // Upstream valve يمين (تفاعلي) بشكل جناح أخضر
-      const upValveBodyGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.6, 18);
-      const upValveMat = new THREE.MeshStandardMaterial({
-        color: 0x00b894,
-        metalness: 0.7,
-        roughness: 0.35
-      });
-      const upstreamValve = new THREE.Mesh(upValveBodyGeo, upValveMat);
+      // Primary Wing Valve يمين (Upstream تفاعلي)
+      const upstreamBodyGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.6, 20);
+      const upstreamValve = new THREE.Mesh(upstreamBodyGeo, bluePipeMat);
       upstreamValve.position.set(3.3, 3.1, 0);
       upstreamValve.rotation.z = Math.PI / 2;
       upstreamValve.userData.type = "upstream";
       interactiveObjects.push(upstreamValve);
       scene.add(upstreamValve);
 
-      const upWheelGeo = new THREE.TorusGeometry(0.85, 0.09, 14, 26);
-      const upWheelMat = new THREE.MeshStandardMaterial({
-        color: 0xe8f5e9,
-        metalness: 0.6,
-        roughness: 0.25
-      });
-      const upWheel = new THREE.Mesh(upWheelGeo, upWheelMat);
-      upWheel.position.set(3.3, 3.1, 0);
-      upWheel.rotation.x = Math.PI / 2;
-      upWheel.userData.type = "upstream";
-      interactiveObjects.push(upWheel);
-      scene.add(upWheel);
+      const upstreamWheelGeo = new THREE.TorusGeometry(0.9, 0.09, 16, 28);
+      const upstreamWheel = new THREE.Mesh(upstreamWheelGeo, blueDarkMat);
+      upstreamWheel.position.set(3.3, 3.1, 0);
+      upstreamWheel.rotation.x = Math.PI / 2;
+      upstreamWheel.userData.type = "upstream";
+      interactiveObjects.push(upstreamWheel);
+      scene.add(upstreamWheel);
 
-      // Hook-Up / Flowline assembly (أزرق + سبول)
-
-      const lineSteelMat = new THREE.MeshStandardMaterial({
+      // HOOK-UP + ADJ BEAN (قريب من الصورة الثالثة)
+      const steelMat = new THREE.MeshStandardMaterial({
         color: 0xd0d8e0,
-        metalness: 0.75,
+        metalness: 0.8,
         roughness: 0.25
       });
 
-      const line1Geo = new THREE.CylinderGeometry(0.2, 0.2, 3.0, 18);
-      const line1 = new THREE.Mesh(line1Geo, lineSteelMat);
-      line1.rotation.z = Math.PI / 2;
-      line1.position.set(4.8, 3.1, 0);
-      scene.add(line1);
+      const hook1Geo = new THREE.CylinderGeometry(0.22, 0.22, 3.0, 18);
+      const hook1 = new THREE.Mesh(hook1Geo, steelMat);
+      hook1.rotation.z = Math.PI / 2;
+      hook1.position.set(4.8, 3.1, 0);
+      scene.add(hook1);
 
       const chokeBlockGeo = new THREE.BoxGeometry(1.7, 1.0, 1.1);
       const chokeBlockMat = new THREE.MeshStandardMaterial({
-        color: 0x124d92,
-        metalness: 0.7,
+        color: 0x1565c0,
+        metalness: 0.8,
         roughness: 0.35
       });
       const chokeBlock = new THREE.Mesh(chokeBlockGeo, chokeBlockMat);
@@ -549,7 +587,7 @@
       interactiveObjects.push(chokeWheel);
       scene.add(chokeWheel);
 
-      // سبول مقطوع (Inspection) خلف البلوك قليلاً
+      // Spool cut-away خلف الـ ADJ BEAN
       const spoolOuterGeo = new THREE.CylinderGeometry(0.45, 0.45, 1.6, 22);
       const spoolOuterMat = new THREE.MeshStandardMaterial({
         color: 0x4f4f4f,
@@ -564,7 +602,7 @@
 
       const spoolInnerDirtyGeo = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 22);
       const spoolDirtyMat = new THREE.MeshStandardMaterial({
-        color: 0x3b2415,  // زيت + deposits
+        color: 0x3b2415,
         roughness: 1.0,
         metalness: 0.1
       });
@@ -586,25 +624,43 @@
       spoolInnerClean.visible = false;
       scene.add(spoolInnerClean);
 
-      // الخط النازل بعد الـ choke
-      const downGeo = new THREE.CylinderGeometry(0.18, 0.18, 2.6, 16);
-      const downPipe = new THREE.Mesh(downGeo, lineSteelMat);
-      downPipe.position.set(7.8, 2.0, 0);
-      scene.add(downPipe);
+      // خط 6" من الـ Choke إلى الـ Manifold (ثخانة أكبر)
+      const exportLineGeo = new THREE.CylinderGeometry(0.30, 0.30, 10, 24);
+      const exportLine = new THREE.Mesh(exportLineGeo, steelMat);
+      exportLine.rotation.z = Math.PI / 2;
+      exportLine.position.set(10.7, 3.1, 0);
+      scene.add(exportLine);
 
-      const elbowGeo = new THREE.TorusGeometry(0.18, 0.08, 10, 18, Math.PI / 2);
-      const elbow = new THREE.Mesh(elbowGeo, lineSteelMat);
-      elbow.position.set(7.8, 0.7, 0);
-      elbow.rotation.z = Math.PI / 2;
-      scene.add(elbow);
+      // MANIFOLD (مبسط مثل الصورة الثانية)
+      const manPadGeo = new THREE.BoxGeometry(12, 0.3, 3);
+      const manPadMat = new THREE.MeshStandardMaterial({
+        color: 0x8d8d8d,
+        roughness: 0.8,
+        metalness: 0.2
+      });
+      const manPad = new THREE.Mesh(manPadGeo, manPadMat);
+      manPad.position.set(16, 0.15, 0);
+      scene.add(manPad);
 
-      const hookLineGeo = new THREE.CylinderGeometry(0.18, 0.18, 4.5, 16);
-      const hookLine = new THREE.Mesh(hookLineGeo, lineSteelMat);
-      hookLine.rotation.z = Math.PI / 2;
-      hookLine.position.set(10.0, 0.7, -1.0);
-      scene.add(hookLine);
+      const manLineGeo = new THREE.CylinderGeometry(0.30, 0.30, 6, 24);
+      const manLine = new THREE.Mesh(manLineGeo, steelMat);
+      manLine.rotation.z = Math.PI / 2;
+      manLine.position.set(16, 1.2, 0);
+      scene.add(manLine);
 
-      // Drain Sample valve
+      // valve في منتصف المني فولد
+      const manValveBodyGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.9, 20);
+      const manValveBody = new THREE.Mesh(manValveBodyGeo, bluePipeMat);
+      manValveBody.position.set(16, 1.6, 0);
+      scene.add(manValveBody);
+
+      const manWheelGeo = new THREE.TorusGeometry(0.9, 0.09, 16, 28);
+      const manWheel = new THREE.Mesh(manWheelGeo, blueDarkMat);
+      manWheel.position.set(16, 2.1, 0);
+      manWheel.rotation.x = Math.PI / 2;
+      scene.add(manWheel);
+
+      // Drain Sample على خط 6" قريب من المني فولد
       const drainValveGeo = new THREE.SphereGeometry(0.3, 20, 20);
       const drainValveMat = new THREE.MeshStandardMaterial({
         color: 0x87cefa,
@@ -612,12 +668,17 @@
         roughness: 0.3
       });
       const drainValve = new THREE.Mesh(drainValveGeo, drainValveMat);
-      drainValve.position.set(11.8, 0.7, -1.0);
+      drainValve.position.set(14.8, 1.0, -1.0);
       drainValve.userData.type = "drain";
       interactiveObjects.push(drainValve);
       scene.add(drainValve);
 
-      // لوحة قياسات 3D
+      const drainLegGeo = new THREE.CylinderGeometry(0.1,0.1,1.2,10);
+      const drainLeg = new THREE.Mesh(drainLegGeo, steelMat);
+      drainLeg.position.set(14.8, 0.4, -1.0);
+      scene.add(drainLeg);
+
+      // لوحة قياسات 3D بالقرب من X-tree
       const gaugePanelGeo = new THREE.BoxGeometry(2.0, 1.2, 0.16);
       const gaugePanelMat = new THREE.MeshStandardMaterial({
         color: 0x111a26,
@@ -642,6 +703,9 @@
       leg2.position.set(-5.6, 2.0, 3.5);
       scene.add(leg2);
 
+      // عامل 3D بسيط
+      createOperator();
+
       raycaster = new THREE.Raycaster();
       pointer = new THREE.Vector2();
 
@@ -650,7 +714,50 @@
 
       updateObjective();
       updateGaugesText();
-      setStatus("ابدأ بقراءة WHP و FLP من شاشة القياسات (HUD أو لوحة 3D).", "#ffd27f");
+      setStatus("ابدأ بقراءة القياسات ثم حرّك العامل للبئر.", "#ffd27f");
+    }
+
+    function createOperator() {
+      const group = new THREE.Group();
+
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: 0x1565c0,
+        metalness: 0.4,
+        roughness: 0.4
+      });
+      const headMat = new THREE.MeshStandardMaterial({
+        color: 0xffe0bd,
+        roughness: 0.6
+      });
+      const helmetMat = new THREE.MeshStandardMaterial({
+        color: 0xffd54f,
+        metalness: 0.4,
+        roughness: 0.4
+      });
+
+      const legsGeo = new THREE.BoxGeometry(0.5, 0.8, 0.4);
+      const legs = new THREE.Mesh(legsGeo, bodyMat);
+      legs.position.set(0, 0.4, 0);
+      group.add(legs);
+
+      const bodyGeo = new THREE.BoxGeometry(0.6, 1.0, 0.45);
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.set(0, 1.3, 0);
+      group.add(body);
+
+      const headGeo = new THREE.SphereGeometry(0.25, 16, 16);
+      const head = new THREE.Mesh(headGeo, headMat);
+      head.position.set(0, 2.0, 0);
+      group.add(head);
+
+      const helmetGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.18, 16);
+      const helmet = new THREE.Mesh(helmetGeo, helmetMat);
+      helmet.position.set(0, 2.2, 0);
+      group.add(helmet);
+
+      group.position.set(-5, 0, 2);
+      scene.add(group);
+      operator = group;
     }
 
     function onPointerDown(event) {
@@ -687,6 +794,12 @@
         return;
       }
 
+      // لازم العامل يكون قريب
+      if (!isOperatorNear(obj, 2.8)) {
+        setStatus("قرّب العامل من هذا الجزء قبل الشغل.", "#ff8080");
+        return;
+      }
+
       if (type === "upstream") {
         if (gameStep < 1) {
           setStatus("اقرأ القياسات أولاً قبل إغلاق صمام Upstream.", "#ff8080");
@@ -694,8 +807,8 @@
         }
         if (!upstreamClosed) {
           upstreamClosed = true;
-          obj.material.color.set(0xe53935); // أحمر = مغلق
-          setStatus("تم إغلاق صمام Upstream بنجاح.", "#9effc0");
+          obj.material.color.set(0xc62828); // أحمر = مغلق
+          setStatus("تم إغلاق صمام Upstream (Primary Wing Valve).", "#9effc0");
           if (gameStep === 1) {
             gameStep = 2;
             updateObjective();
@@ -708,17 +821,16 @@
 
       if (type === "chokeBlock") {
         if (gameStep < 2) {
-          setStatus("أغلق Upstream أولاً ثم تعامل مع الـ ADJ BEAN.", "#ff8080");
+          setStatus("أغلق Upstream أولاً ثم تعامَل مع الـ ADJ BEAN.", "#ff8080");
           return;
         }
 
-        // أول ضغطة: فتح الـ ADJ BEAN وإظهار السبول بـ Blockage
         if (!chokeOpened) {
           chokeOpened = true;
           if (spoolOuter) spoolOuter.visible = true;
           if (spoolInnerDirty) spoolInnerDirty.visible = true;
           if (spoolInnerClean) spoolInnerClean.visible = false;
-          setStatus("تم فتح الـ ADJ BEAN: السبول ظاهر وفيه Blockage واضح.", "#ffd27f");
+          setStatus("تم فتح الـ ADJ BEAN: السبول ظاهر وفيه Blockage.", "#ffd27f");
           if (gameStep === 2) {
             gameStep = 3;
             updateObjective();
@@ -726,7 +838,6 @@
           return;
         }
 
-        // ثاني ضغطة: تنظيف السبول وتغيير القراءات
         if (!blockageCleared) {
           blockageCleared = true;
           whp = 300;
@@ -734,9 +845,9 @@
           casingPressure = 55;
           if (spoolInnerDirty) spoolInnerDirty.visible = false;
           if (spoolInnerClean) spoolInnerClean.visible = true;
-          obj.material.color.set(0x1b5e20); // أخضر غامق = clean / OK
+          obj.material.color.set(0x2e7d32); // أخضر = نظيف
           updateGaugesText();
-          setStatus("تم تنظيف السبول وإزالة الـ Blockage، التدفق رجع طبيعي.", "#9effc0");
+          setStatus("تم تنظيف السبول وإزالة الـ Blockage.", "#9effc0");
           if (gameStep === 3) {
             gameStep = 4;
             updateObjective();
@@ -744,14 +855,13 @@
           return;
         }
 
-        // بعد ما ينظف
         setStatus("الـ ADJ BEAN والسبول نظيفين حالياً.", "#cccccc");
         return;
       }
 
       if (type === "drain") {
         if (gameStep < 4) {
-          setStatus("نظف السبول أولاً، بعدها خذ Drain Sample.", "#ff8080");
+          setStatus("نظف السبول أولاً قبل أخذ Drain Sample.", "#ff8080");
           return;
         }
         if (!sampleTaken) {
@@ -771,7 +881,7 @@
           bottle.position.y -= 0.6;
           scene.add(bottle);
 
-          setStatus("تم أخذ Drain Sample من خط الـ Hook-Up بنجاح.", "#9effc0");
+          setStatus("تم أخذ Drain Sample من خط 6\" باتجاه الـ Manifold.", "#9effc0");
           completeTraining();
         } else {
           setStatus("العينة مأخوذة بالفعل في هذه الدورة.", "#cccccc");
