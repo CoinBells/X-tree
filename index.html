@@ -1,685 +1,658 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>Oilfield Training – Switch Style</title>
+  <title>Oil Facility Training Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{
-      background:#0f172a;
-      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:#0f172a;
-      overflow:hidden;
-      direction:rtl;
-    }
-    #layout{
-      display:flex;
-      width:100vw;
-      height:100vh;
-    }
-    #game-wrapper{
-      flex:1 1 auto;
-      position:relative;
-      background:radial-gradient(circle at top,#60a5fa,#0f172a 55%);
-    }
-    #three-container{
-      position:absolute;
-      inset:0;
-    }
-    /* HUD أعلى الشاشة */
-    #hud{
-      position:absolute;
-      top:10px;
-      left:50%;
-      transform:translateX(-50%);
-      background:rgba(15,23,42,0.92);
-      color:#e5e7eb;
-      border-radius:999px;
-      padding:6px 14px;
-      font-size:11px;
-      border:1px solid rgba(148,163,184,.45);
-      white-space:nowrap;
-      z-index:5;
-      box-shadow:0 8px 18px rgba(0,0,0,.35);
-    }
-    #hint{
-      position:absolute;
-      bottom:10px;
-      right:10px;
-      background:rgba(15,23,42,0.92);
-      color:#e5e7eb;
-      border-radius:14px;
-      padding:8px 12px;
-      font-size:11px;
-      border:1px solid rgba(148,163,184,.45);
-      max-width:260px;
-      z-index:5;
-      box-shadow:0 8px 18px rgba(0,0,0,.35);
-    }
-    /* أزرار لمس – ستايل نينتندو ناعم */
-    #touch-controls{
-      position:absolute;
-      bottom:16px;
-      left:50%;
-      transform:translateX(-50%);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-      z-index:6;
-    }
-    .tc-row{display:flex;gap:8px}
-    .tc-btn{
-      width:54px;
-      height:54px;
-      border-radius:18px;
-      border:none;
-      background:linear-gradient(145deg,#0f172a,#1d293b);
-      color:#e5e7eb;
-      font-size:22px;
-      box-shadow:0 8px 16px rgba(15,23,42,.7);
-      touch-action:none;
-      cursor:pointer;
-    }
-    .tc-btn:active{
-      transform:translateY(1px) scale(.97);
-      background:linear-gradient(145deg,#2563eb,#0f172a);
-    }
-    .tc-btn-small{
-      width:96px;
-      font-size:13px;
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
     }
 
-    /* لوحة جانبية – ألوان ناعمة */
-    #ui-panel{
-      width:340px;
-      max-width:40vw;
-      background:linear-gradient(180deg,#e0f2fe,#eff6ff);
-      border-left:3px solid #60a5fa;
-      display:flex;
-      flex-direction:column;
-      padding:14px 12px;
-      gap:10px;
-      box-shadow:-10px 0 25px rgba(15,23,42,.45);
-    }
-    .card{
-      background:#f9fafb;
-      border-radius:18px;
-      border:1px solid #cbd5f5;
-      padding:10px 12px;
-      font-size:12px;
-      box-shadow:0 6px 16px rgba(148,163,184,.25);
-    }
-    .card h3{font-size:13px;margin-bottom:6px;color:#0f172a}
-    .grid2{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:8px;
-    }
-    .stat-box{
-      background:#eef2ff;
-      border-radius:12px;
-      border:1px solid #c7d2fe;
-      padding:6px 8px;
-    }
-    .stat-label{font-size:11px;opacity:.85;color:#1e293b}
-    .stat-value{
-      font-size:16px;
-      font-weight:700;
-      margin-top:2px;
-      color:#111827;
-      text-shadow:0 0 6px rgba(129,140,248,.9);
-    }
-    .tag{
-      display:inline-block;
-      font-size:11px;
-      padding:2px 8px;
-      border-radius:999px;
-      margin-top:4px;
-    }
-    .tag-ok{
-      background:#dcfce7;
-      color:#166534;
-      border:1px solid #22c55e;
-    }
-    .tag-bad{
-      background:#fee2e2;
-      color:#b91c1c;
-      border:1px solid #f97373;
-    }
-    #well-name{
-      font-weight:700;
-      font-size:14px;
-      margin-bottom:4px;
-      color:#111827;
-    }
-    .btn{
-      border-radius:999px;
-      border:none;
-      padding:8px 10px;
-      font-size:12px;
-      font-weight:600;
-      cursor:pointer;
-      margin-top:6px;
-      width:100%;
-      box-shadow:0 6px 14px rgba(148,163,184,.5);
-    }
-    #btn-open{
-      background:linear-gradient(90deg,#38bdf8,#6366f1);
-      color:#f9fafb;
-    }
-    #btn-clean{
-      background:linear-gradient(90deg,#22c55e,#a3e635);
-      color:#052e16;
-    }
-    #btn-clean.disabled{
-      filter:grayscale(.9);
-      opacity:.55;
-      cursor:default;
-      box-shadow:none;
+    header {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 14px 16px;
+      border-bottom: 1px solid #1f2933;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
 
-    /* bean الواقعي */
-    #bean-card{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-    }
-    #bean-title{
-      font-size:13px;
-      font-weight:600;
-      margin-bottom:2px;
-      color:#111827;
-    }
-    #bean-visual{
-      width:150px;
-      height:150px;
-      border-radius:50%;
-      border:6px solid #94a3b8;
-      box-shadow:0 0 18px rgba(15,23,42,.35) inset;
-      background-color:#020617;
-      background-position:center;
-      background-size:cover;
-      margin:4px auto 2px;
-    }
-    .bean-dirty{background-image:url("bean_blockage.jpg")}
-    .bean-clean{background-image:url("bean_clean.jpg")}
-    #bean-note{
-      font-size:10px;
-      opacity:.95;
-      text-align:center;
-      line-height:1.5;
-      color:#1f2937;
+    header h1 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
     }
 
-    #log{
-      font-size:11px;
-      max-height:160px;
-      overflow-y:auto;
-      color:#111827;
+    header .subtitle {
+      font-size: 0.75rem;
+      opacity: 0.8;
     }
-    #log p{margin-bottom:3px}
 
-    @media(max-width:900px){
-      #ui-panel{width:280px;padding:10px 8px}
-      #hud{font-size:9px;padding:5px 10px}
+    #progressBarOuter {
+      width: 220px;
+      max-width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #020617;
+      overflow: hidden;
+      border: 1px solid #1f2937;
+    }
+
+    #progressBarInner {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #a3e635);
+      transition: width 0.25s ease-out;
+    }
+
+    #layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr);
+      min-height: calc(100vh - 60px);
+      gap: 0;
+    }
+
+    @media (max-width: 800px) {
+      #layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto;
+      }
+    }
+
+    /* Left side: facility cards */
+    #facilityList {
+      padding: 14px;
+      border-left: 1px solid #111827;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%);
+    }
+
+    .listTitle {
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+
+    .cardsGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 620px) {
+      .cardsGrid {
+        grid-template-columns: minmax(0,1fr);
+      }
+    }
+
+    .facilityCard {
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      padding: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.16s ease-out, box-shadow 0.16s ease-out,
+                  border-color 0.16s ease-out, background 0.16s ease-out;
+    }
+
+    .facilityCard:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.45);
+      border-color: #38bdf8;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 70%);
+    }
+
+    .facilityCard.active {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px rgba(34,197,94,0.35);
+    }
+
+    .facilityCard.completed::after {
+      content: "✓ تم الإنجاز";
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      font-size: 0.65rem;
+      color: #22c55e;
+      background: rgba(22, 163, 74, 0.1);
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(22, 163, 74, 0.5);
+    }
+
+    .facilityName {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .facilityTag {
+      font-size: 0.7rem;
+      opacity: 0.8;
+      margin-bottom: 6px;
+    }
+
+    .facilityMeta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 0.65rem;
+      opacity: 0.75;
+    }
+
+    .chip {
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    /* Right side: details / quiz */
+    #detailPanel {
+      padding: 16px;
+      background: radial-gradient(circle at top, #020617 0, #020617 40%, #030712 100%);
+    }
+
+    #detailTitle {
+      font-size: 1rem;
+      margin: 0 0 4px;
+      font-weight: 700;
+    }
+
+    #detailType {
+      font-size: 0.75rem;
+      opacity: 0.75;
+      margin-bottom: 8px;
+    }
+
+    #detailDescription {
+      font-size: 0.8rem;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      color: #e5e7eb;
+    }
+
+    #topicList {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 12px;
+      font-size: 0.78rem;
+    }
+
+    #topicList li {
+      margin-bottom: 4px;
+      padding-left: 0.8rem;
+      position: relative;
+    }
+
+    #topicList li::before {
+      content: "•";
+      position: absolute;
+      right: 0;
+      color: #38bdf8;
+      font-size: 0.9rem;
+    }
+
+    .sectionTitle {
+      font-size: 0.8rem;
+      margin: 10px 0 4px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    #quizArea {
+      margin-top: 4px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    #quizQuestion {
+      font-size: 0.8rem;
+      margin-bottom: 8px;
+    }
+
+    .quizOption {
+      margin-bottom: 4px;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .quizOption input {
+      cursor: pointer;
+    }
+
+    .quizOption label {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    #quizActions {
+      margin-top: 6px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    button {
+      border: none;
+      outline: none;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      background: linear-gradient(135deg, #38bdf8, #22c55e);
+      color: #020617;
+      font-weight: 600;
+      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, opacity 0.12s;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    #quizStatus {
+      font-size: 0.75rem;
+      min-height: 1.1em;
+    }
+
+    #globalStatus {
+      font-size: 0.8rem;
+      margin-top: 8px;
+      opacity: 0.9;
+    }
+
+    #hintBox {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px dashed #1f2937;
+      background: rgba(15, 23, 42, 0.7);
+      color: #cbd5f5;
+    }
+
+    a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <div id="layout">
-    <div id="game-wrapper">
-      <div id="three-container"></div>
 
-      <div id="hud">
-        كمبيوتر: W/S للأمام والخلف، A/D للّف – E فحص، C تنظيف. موبايل: الأسهم + أزرار الفحص والتنظيف.
-      </div>
-      <div id="hint">
-        عالم 3D ناعم بأسلوب Pokémon على السويتش. تحرك في الصحراء، اقترب من بئر،
-        ثم اضغط <b>E</b> أو زر <b>فحص</b> لقراءة WHP/FLP وفتح ADJ BEAN ورؤية الـ bean الحقيقي
-        (blockage / clean) في اللوحة الجانبية.
-      </div>
+<header>
+  <div>
+    <h1>Oil Facility Training Game</h1>
+    <div class="subtitle">منشأة تدريب تفاعلية لمشغلي KOC (نسخة HTML جاهزة لـ GitHub)</div>
+  </div>
+  <div>
+    <div style="font-size:0.7rem; margin-bottom:4px; text-align:left;">Progress</div>
+    <div id="progressBarOuter">
+      <div id="progressBarInner"></div>
+    </div>
+  </div>
+</header>
 
-      <div id="touch-controls">
-        <div class="tc-row">
-          <button id="tc-up" class="tc-btn">↑</button>
-        </div>
-        <div class="tc-row">
-          <button id="tc-left" class="tc-btn">←</button>
-          <button id="tc-down" class="tc-btn">↓</button>
-          <button id="tc-right" class="tc-btn">→</button>
-        </div>
-        <div class="tc-row">
-          <button id="tc-inspect" class="tc-btn tc-btn-small">E فحص</button>
-          <button id="tc-clean" class="tc-btn tc-btn-small">C تنظيف</button>
-        </div>
+<main id="layout">
+  <!-- Left: facility cards -->
+  <section id="facilityList">
+    <div class="listTitle">اختر المنشأة وابدأ المهمات التدريبية:</div>
+    <div class="cardsGrid" id="cardsGrid"></div>
+
+    <div id="globalStatus"></div>
+  </section>
+
+  <!-- Right: details / quiz -->
+  <section id="detailPanel">
+    <h2 id="detailTitle">اضغط على أي منشأة من اليسار للبدء</h2>
+    <div id="detailType"></div>
+    <p id="detailDescription"></p>
+
+    <div id="topicsBlock" style="display:none;">
+      <div class="sectionTitle">عناصر رئيسية في هذه المنشأة:</div>
+      <ul id="topicList"></ul>
+    </div>
+
+    <div id="quizArea" style="display:none;">
+      <div class="sectionTitle">سؤال تدريب على المنشأة:</div>
+      <div id="quizQuestion"></div>
+      <div id="quizOptions"></div>
+      <div id="quizActions">
+        <button id="checkBtn">تحقق من الإجابة</button>
+        <button id="resetBtn" type="button">إعادة المحاولة</button>
+        <span id="quizStatus"></span>
       </div>
     </div>
 
-    <aside id="ui-panel">
-      <div class="card">
-        <div id="well-name">لم يتم اختيار بئر</div>
-        <div class="grid2">
-          <div class="stat-box">
-            <div class="stat-label">WHP (psi)</div>
-            <div id="whp-val" class="stat-value">---</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">FLP (psi)</div>
-            <div id="flp-val" class="stat-value">---</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">CASING</div>
-            <div id="casing-val" class="stat-value">Closed</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">حالة البئر</div>
-            <div id="state-val" class="stat-value">غير مفحوص</div>
-            <div id="state-tag" class="tag tag-ok">Normal</div>
-          </div>
-        </div>
-        <button id="btn-open" class="btn">فتح ADJ BEAN وقراءة الحالة</button>
-        <button id="btn-clean" class="btn disabled">تنظيف الـ blockage من ADJ BEAN</button>
-      </div>
+    <div id="hintBox" style="display:none;"></div>
+  </section>
+</main>
 
-      <div class="card" id="bean-card">
-        <div id="bean-title">منظر البين من الداخل</div>
-        <div id="bean-visual"></div>
-        <div id="bean-note">
-          عند فتح ADJ BEAN يتم عرض صورة من داخل الـ bean.<br>
-          إذا كان فيه ترسبات → Blockage مثل الصورة الحقيقية، وبعد التنظيف يظهر نظيف.
-        </div>
-      </div>
+<script>
+  // تعريف بيانات المنشآت (مبنية على ملفات KOC التدريبية بشكل مبسط)
+  const facilities = [
+    {
+      id: "mainPlant",
+      name: "Main Plant – Gathering Center",
+      type: "منشأة رئيسية لمعالجة النفط والغاز والأنظمة المساندة",
+      description:
+        "هنا تبدأ الرحلة: تجميع النفط والغاز من الآبار، فصل الغاز، التحكم في الضغط، وأنظمة الصمامات و الـ ESD قبل ما يروح أي شيء للمنشآت الأخرى.",
+      topics: [
+        "أنواع الصمامات: Gate, Ball, Plug, Butterfly, Check, Relief.",
+        "خطوط الجذر الرئيسية للنفط والغاز من الـ Inlet Manifold حتى الخزانات والمشاعل.",
+        "أنظمة التحكم و الـ ESD و Fire & Gas."
+      ],
+      quiz: {
+        question:
+          "لماذا نستخدم Relief Valve (PSV) على الأوعية والخطوط عالية الضغط في الـ Main Plant؟",
+        options: [
+          "لزيادة الضغط داخل الوعاء بشكل أسرع",
+          "لحماية المعدة من الضغط الزائد بتفريغ جزء من المحتوى بأمان",
+          "لإغلاق الخط تماماً أثناء الصيانة فقط",
+          "لتغيير اتجاه تدفق النفط إلى خزان آخر"
+        ],
+        correctIndex: 1,
+        explanation:
+          "الـ Relief Valve صمام أمان يفتح تلقائياً إذا تعدى الضغط الحد المصمم للمعدة، فيفرّغ جزء من السائل/الغاز إلى مكان آمن ويمنع الانفجار."
+      },
+      hint:
+        "تذكر أن Design Pressure هو أعلى ضغط تتحمله المعدة، والـ PSV مضبوط على هذا الحد لحمايتها.  [oai_citation:0‡Main Plant.pdf](sediment://file_00000000691071fda71c3aa39cd5a72a)"
+    },
+    {
+      id: "wetOil",
+      name: "Wet Oil Treatment Facility (DDP)",
+      type: "منشأة نزع الماء والملح من النفط (Dehydration & Desalting)",
+      description:
+        "هنا يتم معالجة النفط الرطب اللي يجي من الآبار: إزالة الماء والملح لحماية المعدات وتقليل التآكل وتحسين جودة الخام قبل التصدير.",
+      topics: [
+        "Desalter / Dehydrator يعالج المستحلب بين النفط والماء.",
+        "استخدام Wash Water + Chemicals لكسر الـ Emulsion.",
+        "Effluent Water System للتخلص من المياه المنتجة بعد المعالجة."
+      ],
+      quiz: {
+        question:
+          "ليش وجود ماء وملح عالي في النفط خطير على المنشأة؟",
+        options: [
+          "يزيد من رقم الـ API ويخلي النفط أخف",
+          "يسبب تآكل في المعدات، فقدان طاقة إنتاجية، وزيادة التكلفة",
+          "فقط يخفض درجة حرارة النفط بدون أي مشاكل أخرى",
+          "يؤثر على لون النفط فقط"
+        ],
+        correctIndex: 1,
+        explanation:
+          "الماء المالح داخل النفط يسبب تآكل، مشاكل سلامة، خسارة سعة إنتاجية، وتكاليف صيانة وتشغيل أعلى، عشان كذا نركب DDP داخل الـ GC."
+      },
+      hint:
+        "شوف مقدمة Wet Oil Treatment، موضح فيها تأثير المياه المالحة على التآكل والسلامة والتكلفة وجودة المنتج.  [oai_citation:1‡Wet Oil Treatment Facility.pdf](sediment://file_00000000157471fd9a1911ee8cbdb1ec)"
+    },
+    {
+      id: "tvCompression",
+      name: "TV Compression Facility (CRU + TV Comp.)",
+      type: "منشأة ضغط واسترجاع غاز الـ Tank Vapor (TV)",
+      description:
+        "هنا يتم ضغط غاز الخزانات (TV Gas) وتحويله لمكثفات واسترجاعه بدل ما يروح فلير، عن طريق CRU والـ TV Compressors.",
+      topics: [
+        "CRU: ضغط الغاز الثقيل، تبريد، تكثيف، وإرجاع المكثفات إلى المنظومة.",
+        "TV Compressor جديد (Centrifugal / Screw) لرفع ضغط الغاز وإرساله للـ BS أو LPG.",
+        "تقليل الفلير وتحسين السلامة وحماية البيئة."
+      ],
+      quiz: {
+        question:
+          "إيش الفائدة الأساسية من TV Compression Facility؟",
+        options: [
+          "زيادة مستوى النفط في الخزانات",
+          "ضغط غاز الخزانات (TV Gas) واسترجاعه كمكثفات وتقليل الفلير",
+          "تسخين الغاز قبل ما يدخل الفلير",
+          "فصل الماء عن النفط فقط"
+        ],
+        correctIndex: 1,
+        explanation:
+          "المنشأة مصممة لضغط غاز الخزانات منخفض الضغط، تكثيفه، وإرجاعه كـ Condensate لزيادة الاستفادة وتقليل حرق الغاز في المشاعل."
+      },
+      hint:
+        "راجع مقدمة TV Compression Facility وشرح CRU/TV Gas الموجود في بداية الملف.  [oai_citation:2‡TV Compression Facility Draft 7-1-18 1.pdf](sediment://file_000000003d0871fdab513bd86d548a6f)"
+    },
+    {
+      id: "transit",
+      name: "Crude Oil Transit Facility",
+      type: "منشأة تصدير الخام من الـ GC إلى CMM ثم الخزانات",
+      description:
+        "آخر مرحلة في الرحلة: ضخ الخام الجاف من الخزانات عبر مضخات الترانزيت (Gas Turbine, VSD, أو Electric) إلى Central Mixing Manifold.",
+      topics: [
+        "Dry/Dual Tanks مزودة بمستوى تشغيلي ثابت وسويتشات حماية Low Level.",
+        "Booster Pumps + Main Transit Pumps لرفع الضغط حتى خط التصدير.",
+        "وصلات من كل GC إلى CMM ثم إلى South/ North Tank Farms."
+      ],
+      quiz: {
+        question:
+          "ليش نحتاج مضخات Transit بضغط عالي بين الـ GC و CMM؟",
+        options: [
+          "عشان نخفض الضغط في الخزانات",
+          "لتجاوز الفواقد في الخطوط والمسافة ورفع الضغط حتى يوصل الخام للـ CMM والخزانات",
+          "فقط لتبريد الخام قبل التصدير",
+          "لزيادة نسبة الماء في الخام"
+        ],
+        correctIndex: 1,
+        explanation:
+          "خطوط الترانزيت طويلة وفيها فرق ضغط وارتفاع، فلازم مضخات عالية الضغط عشان توصل التدفق المطلوب من الـ GC إلى CMM والخزانات."
+      },
+      hint:
+        "شوف مقدمة Crude Oil Transit Facility وجدول وحدات التصدير في كل GC وشرح Turbine/VSD/Electric Pumps.  [oai_citation:3‡Crude Oil Transit Facility 1.pdf](sediment://file_00000000ecd071fd82999afd2b24ed42)"
+    }
+  ];
 
-      <div class="card">
-        <h3>Training Objectives</h3>
-        <ul style="padding-right:18px;line-height:1.5;">
-          <li>استكشاف حقل 3D بأسلوب Pokémon والوصول لعدة آبار.</li>
-          <li>قراءة WHP / FLP وتحديد وجود Blockage.</li>
-          <li>رؤية البين الواقعي (مسدود / نظيف) عند فتح ADJ BEAN.</li>
-          <li>تنظيف الـ blockage وملاحظة تغيّر القراءات وشكل البين.</li>
-        </ul>
-      </div>
+  const cardsGrid = document.getElementById("cardsGrid");
+  const detailTitle = document.getElementById("detailTitle");
+  const detailType = document.getElementById("detailType");
+  const detailDescription = document.getElementById("detailDescription");
+  const topicsBlock = document.getElementById("topicsBlock");
+  const topicList = document.getElementById("topicList");
+  const quizArea = document.getElementById("quizArea");
+  const quizQuestion = document.getElementById("quizQuestion");
+  const quizOptions = document.getElementById("quizOptions");
+  const quizStatus = document.getElementById("quizStatus");
+  const checkBtn = document.getElementById("checkBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const hintBox = document.getElementById("hintBox");
+  const progressBarInner = document.getElementById("progressBarInner");
+  const globalStatus = document.getElementById("globalStatus");
 
-      <div class="card">
-        <h3>Log</h3>
-        <div id="log"></div>
-      </div>
-    </aside>
-  </div>
+  let activeFacilityId = null;
+  const completed = {};
 
-  <!-- Three.js -->
-  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-  <script>
-    // ===== إعداد Three.js بأسلوب Pokémon (ألوان ناعمة وكاميرا مائلة) =====
-    const container = document.getElementById("three-container");
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x90c9ff, 200, 900);
+  function renderCards() {
+    cardsGrid.innerHTML = "";
+    facilities.forEach(fac => {
+      const card = document.createElement("article");
+      card.className = "facilityCard";
+      card.dataset.id = fac.id;
 
-    const camera = new THREE.PerspectiveCamera(
-      55,
-      container.clientWidth / container.clientHeight,
-      0.1,
-      2000
+      const nameEl = document.createElement("div");
+      nameEl.className = "facilityName";
+      nameEl.textContent = fac.name;
+      card.appendChild(nameEl);
+
+      const tagEl = document.createElement("div");
+      tagEl.className = "facilityTag";
+      tagEl.textContent = fac.type;
+      card.appendChild(tagEl);
+
+      const meta = document.createElement("div");
+      meta.className = "facilityMeta";
+
+      const chip1 = document.createElement("span");
+      chip1.className = "chip";
+      chip1.textContent = "مهمة تدريبية";
+
+      const chip2 = document.createElement("span");
+      chip2.className = "chip";
+      chip2.textContent = "سؤال واحد + شرح";
+
+      meta.appendChild(chip1);
+      meta.appendChild(chip2);
+      card.appendChild(meta);
+
+      card.addEventListener("click", () => selectFacility(fac.id));
+
+      if (completed[fac.id]) {
+        card.classList.add("completed");
+      }
+      if (activeFacilityId === fac.id) {
+        card.classList.add("active");
+      }
+
+      cardsGrid.appendChild(card);
+    });
+  }
+
+  function selectFacility(id) {
+    activeFacilityId = id;
+    const fac = facilities.find(f => f.id === id);
+    if (!fac) return;
+
+    document
+      .querySelectorAll(".facilityCard")
+      .forEach(c => c.classList.remove("active"));
+    const activeCard = document.querySelector('.facilityCard[data-id="' + id + '"]');
+    if (activeCard) activeCard.classList.add("active");
+
+    detailTitle.textContent = fac.name;
+    detailType.textContent = fac.type;
+    detailDescription.textContent = fac.description;
+
+    topicList.innerHTML = "";
+    fac.topics.forEach(t => {
+      const li = document.createElement("li");
+      li.textContent = t;
+      topicList.appendChild(li);
+    });
+    topicsBlock.style.display = "block";
+
+    // render quiz
+    quizArea.style.display = "block";
+    quizQuestion.textContent = fac.quiz.question;
+    quizOptions.innerHTML = "";
+    fac.quiz.options.forEach((opt, idx) => {
+      const idStr = `opt_${fac.id}_${idx}`;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "quizOption";
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "quiz_" + fac.id;
+      input.id = idStr;
+      input.value = idx;
+
+      const label = document.createElement("label");
+      label.htmlFor = idStr;
+      label.textContent = opt;
+
+      wrapper.appendChild(input);
+      wrapper.appendChild(label);
+      quizOptions.appendChild(wrapper);
+    });
+
+    quizStatus.textContent = "";
+    hintBox.style.display = "none";
+    hintBox.textContent = "";
+
+    checkBtn.disabled = false;
+  }
+
+  function updateProgress() {
+    const total = facilities.length;
+    const done = Object.keys(completed).length;
+    const ratio = (done / total) * 100;
+    progressBarInner.style.width = ratio + "%";
+
+    if (done === 0) {
+      globalStatus.textContent = "ما بديت لسه، اختر منشأة من القائمة وابدأ أول مهمة.";
+    } else if (done < total) {
+      globalStatus.textContent = `أنجزت ${done} من ${total} منشآت. كمل الباقي عشان تخلص اللعبة.`;
+    } else {
+      globalStatus.textContent =
+        "مبروك! أنجزت جميع المنشآت الأربع. تقدر تعيد الأسئلة أو تطور اللعبة بنفسك (HTML/JS فقط).";
+    }
+  }
+
+  checkBtn.addEventListener("click", () => {
+    if (!activeFacilityId) return;
+    const fac = facilities.find(f => f.id === activeFacilityId);
+    if (!fac) return;
+
+    const selected = document.querySelector(
+      'input[name="quiz_' + fac.id + '"]:checked'
     );
-
-    const renderer = new THREE.WebGLRenderer({ antialias:true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
-
-    function onResize(){
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    }
-    window.addEventListener("resize", onResize);
-
-    // إضاءة ناعمة
-    const hemi = new THREE.HemisphereLight(0xffffff, 0xf0c27b, 0.9);
-    scene.add(hemi);
-    const sun = new THREE.DirectionalLight(0xfff4e5, 0.9);
-    sun.position.set(120, 180, -80);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    scene.add(sun);
-
-    // أرضية رملية ناعمة
-    const groundGeo = new THREE.PlaneGeometry(4000, 4000, 60, 60);
-    const groundMat = new THREE.MeshLambertMaterial({ color:0xf6d6a9 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI/2;
-    ground.receiveShadow = true;
-
-    // تموّجات بسيطة للرمل
-    for(let i=0;i<ground.geometry.attributes.position.count;i++){
-      const y = (Math.sin(i*0.13)+Math.cos(i*0.07))*0.6;
-      ground.geometry.attributes.position.setY(i, y);
-    }
-    ground.geometry.computeVertexNormals();
-    scene.add(ground);
-
-    // بعض الأعشاب/الشجيرات
-    function addBush(x,z){
-      const geo = new THREE.SphereGeometry(4,12,12);
-      const mat = new THREE.MeshLambertMaterial({ color:0x4ade80 });
-      const m = new THREE.Mesh(geo, mat);
-      m.castShadow = true;
-      m.position.set(x,2.5,z);
-      scene.add(m);
-    }
-    for(let i=0;i<18;i++){
-      const x = (Math.random()-0.5)*600;
-      const z = (Math.random()-0.5)*600;
-      addBush(x,z);
+    if (!selected) {
+      quizStatus.style.color = "#f97316";
+      quizStatus.textContent = "اختر إجابة أولاً.";
+      return;
     }
 
-    // شخصية العامل – تشيبي (رأس كبير, جسم قصير)
-    const worker = new THREE.Group();
-
-    const bodyGeo = new THREE.CapsuleGeometry(4,6,12,18);
-    const bodyMat = new THREE.MeshLambertMaterial({ color:0xffd54f });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.castShadow = true;
-    body.position.y = 6;
-    worker.add(body);
-
-    const headGeo = new THREE.SphereGeometry(4.3,24,24);
-    const headMat = new THREE.MeshLambertMaterial({ color:0xffe0b2 });
-    const head = new THREE.Mesh(headGeo, headMat);
-    head.castShadow = true;
-    head.position.y = 11.8;
-    worker.add(head);
-
-    const helmetGeo = new THREE.SphereGeometry(4.8,24,24,0,Math.PI*2,0,Math.PI/1.6);
-    const helmetMat = new THREE.MeshLambertMaterial({ color:0xfb923c });
-    const helmet = new THREE.Mesh(helmetGeo, helmetMat);
-    helmet.castShadow = true;
-    helmet.position.y = 12.1;
-    worker.add(helmet);
-
-    const legGeo = new THREE.CylinderGeometry(1.2,1.5,4,14);
-    const legMat = new THREE.MeshLambertMaterial({ color:0x1d4ed8 });
-    const legL = new THREE.Mesh(legGeo, legMat);
-    const legR = legL.clone();
-    legL.position.set(-1.3,3.3,0);
-    legR.position.set( 1.3,3.3,0);
-    legL.castShadow = legR.castShadow = true;
-    worker.add(legL, legR);
-
-    worker.position.set(70,0,-40);
-    scene.add(worker);
-
-    // آبار بشكل ناعم (X-tree مبسط + ذراع choke)
-    function createWell(){
-      const g = new THREE.Group();
-
-      const baseGeo = new THREE.CylinderGeometry(4,4,2,20);
-      const baseMat = new THREE.MeshLambertMaterial({ color:0x4b5563 });
-      const base = new THREE.Mesh(baseGeo, baseMat);
-      base.position.y = 1;
-      base.castShadow = true;
-      base.receiveShadow = true;
-      g.add(base);
-
-      const stemGeo = new THREE.CylinderGeometry(1.6,1.6,10,20);
-      const stemMat = new THREE.MeshLambertMaterial({ color:0x1d4ed8 });
-      const stem = new THREE.Mesh(stemGeo, stemMat);
-      stem.position.y = 7;
-      stem.castShadow = true;
-      g.add(stem);
-
-      const armGeo = new THREE.CylinderGeometry(0.8,0.8,7,18);
-      const arm = new THREE.Mesh(armGeo, stemMat);
-      arm.rotation.z = Math.PI/2;
-      arm.position.set(4,8.6,0);
-      arm.castShadow = true;
-      g.add(arm);
-
-      const chokeGeo = new THREE.CapsuleGeometry(1,1.5,8,16);
-      const chokeMat = new THREE.MeshLambertMaterial({ color:0x22c55e });
-      const choke = new THREE.Mesh(chokeGeo, chokeMat);
-      choke.position.set(8,8.6,0);
-      choke.rotation.z = Math.PI/2;
-      choke.castShadow = true;
-      choke.name = "choke";
-      g.add(choke);
-
-      return g;
+    const index = Number(selected.value);
+    if (index === fac.quiz.correctIndex) {
+      quizStatus.style.color = "#22c55e";
+      quizStatus.textContent = "إجابة صحيحة ✔";
+      hintBox.style.display = "block";
+      hintBox.textContent = fac.quiz.explanation;
+      completed[fac.id] = true;
+      renderCards();
+      updateProgress();
+      checkBtn.disabled = true;
+    } else {
+      quizStatus.style.color = "#f97316";
+      quizStatus.textContent = "الإجابة غير صحيحة، جرّب مرة ثانية أو اضغط إعادة المحاولة.";
+      hintBox.style.display = "block";
+      hintBox.textContent =
+        "فكر في الهدف الرئيسي من هذه المنشأة في الواقع، مو في خيار واحد من الجمل.";
     }
+  });
 
-    const wellsData = [
-      { id:"AH-0117", pos:new THREE.Vector3(90,0,-40), blockage:true,  cleaned:false },
-      { id:"AH-0216", pos:new THREE.Vector3(-70,0,-60), blockage:false, cleaned:false },
-      { id:"AH-0274", pos:new THREE.Vector3(150,0,70), blockage:true,  cleaned:false },
-      { id:"AH-0287", pos:new THREE.Vector3(-140,0,130), blockage:true, cleaned:false },
-      { id:"MG-0345", pos:new THREE.Vector3(40,0,160),  blockage:false, cleaned:false }
-    ];
+  resetBtn.addEventListener("click", () => {
+    if (!activeFacilityId) return;
+    const fac = facilities.find(f => f.id === activeFacilityId);
+    if (!fac) return;
 
-    wellsData.forEach(w=>{
-      const mesh = createWell();
-      mesh.position.copy(w.pos);
-      mesh.userData.id = w.id;
-      mesh.userData.blockage = w.blockage;
-      mesh.userData.cleaned  = w.cleaned;
-      scene.add(mesh);
-      w.mesh = mesh;
-    });
+    document
+      .querySelectorAll('input[name="quiz_' + fac.id + '"]')
+      .forEach(el => (el.checked = false));
 
-    // حركة اللاعب (مشابه لألعاب بوكيمون – كاميرا مائلة خلفه)
-    let yaw = 0;
-    const keys = { forward:false, backward:false, left:false, right:false };
+    quizStatus.textContent = "";
+    hintBox.style.display = "none";
+    hintBox.textContent = "";
+    checkBtn.disabled = false;
+  });
 
-    window.addEventListener("keydown",e=>{
-      if(e.code==="KeyW"||e.code==="ArrowUp")    keys.forward = true;
-      if(e.code==="KeyS"||e.code==="ArrowDown")  keys.backward = true;
-      if(e.code==="KeyA"||e.code==="ArrowLeft")  keys.left = true;
-      if(e.code==="KeyD"||e.code==="ArrowRight") keys.right = true;
-      if(e.code==="KeyE") inspectNearest();
-      if(e.code==="KeyC") cleanCurrent();
-    });
-    window.addEventListener("keyup",e=>{
-      if(e.code==="KeyW"||e.code==="ArrowUp")    keys.forward = false;
-      if(e.code==="KeyS"||e.code==="ArrowDown")  keys.backward = false;
-      if(e.code==="KeyA"||e.code==="ArrowLeft")  keys.left = false;
-      if(e.code==="KeyD"||e.code==="ArrowRight") keys.right = false;
-    });
+  // initial
+  renderCards();
+  updateProgress();
+</script>
 
-    function bindTouch(btnId,keyName){
-      const btn=document.getElementById(btnId);
-      if(!btn) return;
-      const start=e=>{e.preventDefault();keys[keyName]=true;};
-      const end  =e=>{e.preventDefault();keys[keyName]=false;};
-      btn.addEventListener("touchstart",start,{passive:false});
-      btn.addEventListener("touchend",end,{passive:false});
-      btn.addEventListener("touchcancel",end,{passive:false});
-      btn.addEventListener("mousedown",start);
-      window.addEventListener("mouseup",end);
-    }
-    bindTouch("tc-up","forward");
-    bindTouch("tc-down","backward");
-    bindTouch("tc-left","left");
-    bindTouch("tc-right","right");
-
-    document.getElementById("tc-inspect")
-      .addEventListener("click",()=>inspectNearest());
-    document.getElementById("tc-inspect")
-      .addEventListener("touchstart",e=>{e.preventDefault();inspectNearest();});
-    document.getElementById("tc-clean")
-      .addEventListener("click",()=>cleanCurrent());
-    document.getElementById("tc-clean")
-      .addEventListener("touchstart",e=>{e.preventDefault();cleanCurrent();});
-
-    function updatePlayer(delta){
-      const turnSpeed = 2.0 * delta;
-      const moveSpeed = 32  * delta;
-
-      if(keys.left)  yaw += turnSpeed;
-      if(keys.right) yaw -= turnSpeed;
-
-      const dir = new THREE.Vector3(Math.sin(yaw),0,-Math.cos(yaw));
-
-      if(keys.forward)  worker.position.addScaledVector(dir, moveSpeed);
-      if(keys.backward) worker.position.addScaledVector(dir,-moveSpeed);
-
-      // كاميرا مائلة مثل بوكيمون
-      const camOffset = new THREE.Vector3(0,35,60);
-      camOffset.applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
-      camera.position.copy(worker.position).add(camOffset);
-      camera.lookAt(worker.position.clone().add(new THREE.Vector3(0,10,0)));
-    }
-
-    // ===== منطق التدريب وواجهة البئر =====
-    const wellNameEl = document.getElementById("well-name");
-    const whpEl      = document.getElementById("whp-val");
-    const flpEl      = document.getElementById("flp-val");
-    const casingEl   = document.getElementById("casing-val");
-    const stateEl    = document.getElementById("state-val");
-    const stateTag   = document.getElementById("state-tag");
-    const btnOpen    = document.getElementById("btn-open");
-    const btnClean   = document.getElementById("btn-clean");
-    const logEl      = document.getElementById("log");
-    const beanVisual = document.getElementById("bean-visual");
-
-    let currentWell = null;
-
-    function log(msg){
-      const p=document.createElement("p");
-      p.textContent=msg;
-      logEl.prepend(p);
-    }
-
-    function calcPressures(w){
-      if(w.userData.blockage && !w.userData.cleaned){
-        return {
-          whp:420+Math.floor(Math.random()*20),
-          flp:120+Math.floor(Math.random()*15),
-          bad:true,
-          text:"Blockage محتمل / مؤكد"
-        };
-      }else{
-        return {
-          whp:260+Math.floor(Math.random()*15),
-          flp:240+Math.floor(Math.random()*15),
-          bad:false,
-          text:"تدفق طبيعي"
-        };
-      }
-    }
-
-    function updateBeanVisual(w){
-      beanVisual.classList.remove("bean-dirty","bean-clean");
-      if(!w) return;
-      if(w.userData.blockage && !w.userData.cleaned){
-        beanVisual.classList.add("bean-dirty");
-      }else{
-        beanVisual.classList.add("bean-clean");
-      }
-    }
-
-    function updateUIForWell(w){
-      if(!w){
-        wellNameEl.textContent="لم يتم اختيار بئر";
-        whpEl.textContent="---";
-        flpEl.textContent="---";
-        casingEl.textContent="Closed";
-        stateEl.textContent="غير مفحوص";
-        stateTag.textContent="Normal";
-        stateTag.className="tag tag-ok";
-        btnClean.classList.add("disabled");
-        updateBeanVisual(null);
-        return;
-      }
-      const p = calcPressures(w);
-      wellNameEl.textContent="بئر "+w.userData.id;
-      whpEl.textContent=p.whp+" psi";
-      flpEl.textContent=p.flp+" psi";
-      casingEl.textContent="Closed";
-      stateEl.textContent=p.text;
-      if(p.bad){
-        stateTag.textContent="Blockage";
-        stateTag.className="tag tag-bad";
-        btnClean.classList.remove("disabled");
-      }else{
-        stateTag.textContent="Normal";
-        stateTag.className="tag tag-ok";
-        btnClean.classList.add("disabled");
-      }
-      updateBeanVisual(w);
-    }
-
-    function nearestWell(){
-      let best=null;
-      let bestDist=30;
-      const pos=worker.position;
-      wellsData.forEach(w=>{
-        const d = pos.distanceTo(w.mesh.position);
-        if(d<bestDist){
-          bestDist=d;
-          best=w.mesh;
-        }
-      });
-      return best;
-    }
-
-    function inspectNearest(){
-      const w = nearestWell();
-      if(!w){
-        log("لا يوجد بئر قريب للفحص، اقترب أكثر.");
-        return;
-      }
-      currentWell = w;
-      log("فحص البئر "+w.userData.id+" وفتح ADJ BEAN (عرض البين).");
-      updateUIForWell(w);
-    }
-
-    function cleanCurrent(){
-      if(!currentWell) return;
-      if(!currentWell.userData.blockage || currentWell.userData.cleaned) return;
-      currentWell.userData.cleaned = true;
-      log("تم تنظيف الـ blockage من ADJ BEAN للبئر "+currentWell.userData.id+" – البين أصبح نظيف.");
-      updateUIForWell(currentWell);
-      const choke = currentWell.getObjectByName("choke");
-      if(choke) choke.material.color.set(0x22c55e);
-    }
-
-    btnOpen.addEventListener("click",()=>{
-      if(!currentWell){inspectNearest();return;}
-      const p = calcPressures(currentWell);
-      whpEl.textContent=p.whp+" psi";
-      flpEl.textContent=p.flp+" psi";
-      stateEl.textContent=p.text;
-      if(p.bad){
-        stateTag.textContent="Blockage";
-        stateTag.className="tag tag-bad";
-        btnClean.classList.remove("disabled");
-        log("قراءة WHP/FLP للبئر "+currentWell.userData.id+" تشير إلى Blockage – شاهد البين.");
-      }else{
-        stateTag.textContent="Normal";
-        stateTag.className="tag tag-ok";
-        btnClean.classList.add("disabled");
-        log("قراءة WHP/FLP للبئر "+currentWell.userData.id+" طبيعية – البين نظيف.");
-      }
-      updateBeanVisual(currentWell);
-    });
-
-    btnClean.addEventListener("click",cleanCurrent);
-
-    log("تحرك في العالم، اقترب من الآبار، افحص ونظّف الـ blockage، ولاحظ شكل البين والضغوط.");
-
-    let last = performance.now();
-    function animate(now){
-      const delta = (now-last)/1000;
-      last = now;
-      updatePlayer(delta);
-      renderer.render(scene,camera);
-      requestAnimationFrame(animate);
-    }
-    onResize();
-    requestAnimationFrame(animate);
-  </script>
 </body>
 </html>
