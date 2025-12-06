@@ -19,7 +19,6 @@
       inset: 0;
     }
 
-    /* Info panel */
     #info-panel {
       position: fixed;
       top: 10px;
@@ -73,7 +72,6 @@
       font-size: 10px;
     }
 
-    /* HUD (top-left) */
     #hud {
       position: fixed;
       top: 10px;
@@ -103,7 +101,6 @@
       opacity: 0.8;
     }
 
-    /* Bottom hint */
     #hint {
       position: fixed;
       bottom: 12px;
@@ -140,17 +137,16 @@
     Rotate: drag | Zoom: pinch / scroll | Move: two-finger drag | Select: tap
   </div>
 
-  <!-- كود اللعبة كـ ES Module -->
+  <!-- كود اللعبة مع استيراد محلي -->
   <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.152.2/build/three.module.js';
-    import { OrbitControls } from 'https://unpkg.com/three@0.152.2/examples/jsm/controls/OrbitControls.js';
+    import * as THREE from './three.module.js';
+    import { OrbitControls } from './OrbitControls.js';
 
     const container   = document.getElementById('canvas-container');
     const infoPanel   = document.getElementById('info-panel');
     const facilityTag = infoPanel.querySelector('.facility-tag');
     const hudFacility = document.getElementById('hud-facility');
 
-    // مشهد + كاميرا + رندر
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x020617);
 
@@ -173,7 +169,6 @@
     controls.target.set(0, 5, 0);
     controls.update();
 
-    // إضاءة
     const ambient = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambient);
 
@@ -181,7 +176,6 @@
     dir.position.set(40, 80, 40);
     scene.add(dir);
 
-    // أرضية + Grid
     const groundGeo = new THREE.PlaneGeometry(220, 220);
     const groundMat = new THREE.MeshStandardMaterial({
       color: 0x020617,
@@ -196,7 +190,6 @@
     const grid = new THREE.GridHelper(220, 22, 0x4b5563, 0x1f2937);
     scene.add(grid);
 
-    // بيانات المعدات
     const equipmentData = {
       "tv_cru_block": {
         name: "TV Compression Facility (CRU + TV Comp)",
@@ -333,13 +326,11 @@
       return mesh;
     }
 
-    // مناطق المنشأة
     createFacilityZone("TV Compression", 0x22d3ee, new THREE.Vector3(-40, 1.5, -40));
     createFacilityZone("DDP / Desalter", 0x4ade80, new THREE.Vector3( 40, 1.5, -40));
     createFacilityZone("Main Plant",      0xf97316, new THREE.Vector3(-40, 1.5,  40));
     createFacilityZone("Transit",         0x818cf8, new THREE.Vector3( 40, 1.5,  40));
 
-    // المعدات داخل كل منطقة
     createEquipmentBox("tv_cru_block",    0x06b6d4, new THREE.Vector3(-40, 3, -40));
     createEquipmentBox("tv_recip_comp",   0x0ea5e9, new THREE.Vector3(-46, 3, -36), {x:5,y:2,z:3});
 
@@ -353,7 +344,6 @@
     createEquipmentBox("transit_dry_tank",0x38bdf8, new THREE.Vector3(46, 3.5, 36), {x:5,y:3,z:5});
     createEquipmentBox("transit_pump",    0x6366f1, new THREE.Vector3(34, 2.5, 36), {x:5,y:1.8,z:3});
 
-    // Raycasting للاختيار
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -391,7 +381,6 @@
 
     renderer.domElement.addEventListener('click', onClick);
 
-    // Resize
     window.addEventListener('resize', () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
@@ -400,7 +389,6 @@
       renderer.setSize(w, h);
     });
 
-    // Loop
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
