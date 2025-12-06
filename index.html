@@ -13,7 +13,6 @@
       color:#f9fafb;
     }
 
-    /* HUD أعلى الشاشة */
     #hud {
       position:fixed;
       top:10px;
@@ -28,7 +27,6 @@
       white-space:nowrap;
     }
 
-    /* تلميح جانبي */
     #hint {
       position:fixed;
       bottom:150px;
@@ -42,7 +40,6 @@
       z-index:5;
     }
 
-    /* لوحة الفحص */
     #inspect-panel {
       position:fixed;
       top:50%;
@@ -113,7 +110,6 @@
     #btn-clean{background:linear-gradient(90deg,#22c55e,#a3e635);color:#052e16;}
     #btn-clean.disabled{filter:grayscale(.8);opacity:.6;cursor:default;}
 
-    /* Log */
     #log-box{
       position:fixed;
       bottom:150px;
@@ -131,7 +127,6 @@
     #log-box h4{font-size:13px;margin-bottom:4px;}
     #log p{margin-bottom:3px;}
 
-    /* أزرار اللمس */
     #touch-controls{
       position:fixed;
       bottom:15px;
@@ -168,26 +163,20 @@
       height:52px;
       font-size:14px;
     }
-
-    @media(max-width:900px){
-      #hud{font-size:11px;padding:7px 14px;}
-      #hint{bottom:160px;font-size:11px;}
-    }
   </style>
 </head>
 <body>
   <div id="hud">
-    كمبيوتر: W/A/S/D + ماوس. موبايل: استخدم الأسهم وأزرار "E فحص" و "C تنظيف" أسفل الشاشة.
+    كمبيوتر: W/S للأمام والخلف، A/D لِلّفّة، ماوس للنظر. موبايل: ↑ يمشي، ↓ يرجع، ← / → يلف، أزرار "E فحص" و "C تنظيف".
   </div>
   <div id="hint">
-    تحرك في الحقل، اقترب من الآبار، ثم استخدم زر <b>E فحص</b> لقراءة WHP/FLP وفتح ADJ BEAN، وزر <b>C تنظيف</b> لإزالة الـ blockage.
+    تحرك في الحقل، اقترب من الآبار (موجودة حولك)، ثم اضغط زر <b>E فحص</b> لقراءة WHP/FLP وفتح ADJ BEAN، وزر <b>C تنظيف</b> لإزالة الـ blockage.
   </div>
   <div id="log-box">
     <h4>Log</h4>
     <div id="log"></div>
   </div>
 
-  <!-- أزرار لمس كبيرة -->
   <div id="touch-controls">
     <div class="tc-row">
       <button id="tc-up" class="tc-btn">↑</button>
@@ -235,7 +224,6 @@
     </div>
   </div>
 
-  <!-- Three.js -->
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 
   <script>
@@ -261,14 +249,14 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    const hemiLight = new THREE.HemisphereLight(0xffffff,0xe0bb7f,0.8);
+    const hemiLight = new THREE.HemisphereLight(0xffffff,0xe0bb7f,0.9);
     scene.add(hemiLight);
     const dirLight = new THREE.DirectionalLight(0xffffff,0.8);
-    dirLight.position.set(50,80,-20);
+    dirLight.position.set(60,90,-40);
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    const groundGeo = new THREE.PlaneGeometry(4000,4000,1,1);
+    const groundGeo = new THREE.PlaneGeometry(4000,4000);
     const groundMat = new THREE.MeshStandardMaterial({color:0xf0c27b});
     const ground = new THREE.Mesh(groundGeo,groundMat);
     ground.rotation.x = -Math.PI/2;
@@ -292,10 +280,11 @@
     const helmet = new THREE.Mesh(helmetGeo,helmetMat);
     helmet.position.y = 5.4;
     workerGroup.add(helmet);
-    workerGroup.position.set(0,0,0);
+
+    // نخلي العامل يبدأ قريب من أول بئر
+    workerGroup.position.set(70,0,-40);
     scene.add(workerGroup);
 
-    // آبار
     function createWell(colorBase) {
       const well = new THREE.Group();
       const baseGeo = new THREE.CylinderGeometry(2,2,1,16);
@@ -304,14 +293,12 @@
       base.castShadow = true;
       base.receiveShadow = true;
       well.add(base);
-
       const vertGeo = new THREE.CylinderGeometry(0.8,0.8,8,16);
       const vertMat = new THREE.MeshStandardMaterial({color:colorBase});
       const vert = new THREE.Mesh(vertGeo,vertMat);
       vert.position.y = 4.5;
       vert.castShadow = true;
       well.add(vert);
-
       const armGeo = new THREE.CylinderGeometry(0.6,0.6,5,16);
       const armMat = new THREE.MeshStandardMaterial({color:colorBase});
       const arm = new THREE.Mesh(armGeo,armMat);
@@ -319,30 +306,27 @@
       arm.position.set(2.5,4.5,0);
       arm.castShadow = true;
       well.add(arm);
-
       const chokeGeo = new THREE.BoxGeometry(1.4,1.4,1.4);
       const chokeMat = new THREE.MeshStandardMaterial({color:0x22c55e});
       const choke = new THREE.Mesh(chokeGeo,chokeMat);
       choke.position.set(5,4.5,0);
       choke.name = "choke";
       well.add(choke);
-
       const flowGeo = new THREE.CylinderGeometry(0.45,0.45,7,12);
       const flowMat = new THREE.MeshStandardMaterial({color:0x93c5fd});
       const flow = new THREE.Mesh(flowGeo,flowMat);
       flow.rotation.z = Math.PI/2;
       flow.position.set(8,4.3,0.5);
       well.add(flow);
-
       return well;
     }
 
     const wellsData = [
       {id:"AH-0117", pos:new THREE.Vector3(80,0,-40), blockage:true, cleaned:false},
-      {id:"AH-0216", pos:new THREE.Vector3(-120,0,-60), blockage:false, cleaned:false},
-      {id:"AH-0274", pos:new THREE.Vector3(160,0,90), blockage:true, cleaned:false},
-      {id:"AH-0287", pos:new THREE.Vector3(-200,0,140), blockage:true, cleaned:false},
-      {id:"MG-0345", pos:new THREE.Vector3(60,0,170), blockage:false, cleaned:false}
+      {id:"AH-0216", pos:new THREE.Vector3(-60,0,-50), blockage:false, cleaned:false},
+      {id:"AH-0274", pos:new THREE.Vector3(140,0,60), blockage:true, cleaned:false},
+      {id:"AH-0287", pos:new THREE.Vector3(-140,0,120), blockage:true, cleaned:false},
+      {id:"MG-0345", pos:new THREE.Vector3(40,0,150), blockage:false, cleaned:false}
     ];
 
     wellsData.forEach(w=>{
@@ -355,61 +339,59 @@
       w.mesh = wellMesh;
     });
 
-    // حركة الكاميرا / اللاعب
     let yaw = 0;
-    let pitch = 0;
-    const keys = {w:false,a:false,s:false,d:false};
+    const keys = {forward:false, backward:false, left:false, right:false};
 
+    // كيبورد
     window.addEventListener("keydown",e=>{
-      if(e.code==="KeyW") keys.w=true;
-      if(e.code==="KeyS") keys.s=true;
-      if(e.code==="KeyA") keys.a=true;
-      if(e.code==="KeyD") keys.d=true;
+      if(e.code==="KeyW") keys.forward=true;
+      if(e.code==="KeyS") keys.backward=true;
+      if(e.code==="KeyA") keys.left=true;
+      if(e.code==="KeyD") keys.right=true;
       if(e.code==="KeyE") inspectNearest();
       if(e.code==="KeyC") cleanCurrent();
     });
     window.addEventListener("keyup",e=>{
-      if(e.code==="KeyW") keys.w=false;
-      if(e.code==="KeyS") keys.s=false;
-      if(e.code==="KeyA") keys.a=false;
-      if(e.code==="KeyD") keys.d=false;
+      if(e.code==="KeyW") keys.forward=false;
+      if(e.code==="KeyS") keys.backward=false;
+      if(e.code==="KeyA") keys.left=false;
+      if(e.code==="KeyD") keys.right=false;
     });
 
+    // ماوس يدوّر الكاميرا أيضًا (اختياري)
     let isPointerDown=false;
     window.addEventListener("mousedown",()=>{isPointerDown=true;});
     window.addEventListener("mouseup",()=>{isPointerDown=false;});
     window.addEventListener("mousemove",e=>{
       if(!isPointerDown) return;
       yaw -= e.movementX*0.003;
-      pitch -= e.movementY*0.003;
-      const lim = Math.PI/3;
-      if(pitch>lim)pitch=lim;
-      if(pitch<-lim)pitch=-lim;
     });
 
     function updatePlayer(delta){
-      const dir = new THREE.Vector3();
-      if(keys.w) dir.z -= 1;
-      if(keys.s) dir.z += 1;
-      if(keys.a) dir.x -= 1;
-      if(keys.d) dir.x += 1;
-      if(dir.lengthSq()>0){
-        dir.normalize();
-        const rot = new THREE.Matrix4().makeRotationY(yaw);
-        dir.applyMatrix4(rot);
-        const speed = 40 * delta;
-        workerGroup.position.addScaledVector(dir,speed);
-      }
-      workerGroup.position.y = 0;
+      const moveSpeed = 35 * delta;
+      const turnSpeed = 1.8 * delta;
 
-      const camOffset = new THREE.Vector3(0,10,22);
+      if(keys.left) yaw += turnSpeed;
+      if(keys.right) yaw -= turnSpeed;
+
+      const dir = new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)*-1);
+
+      if(keys.forward) {
+        workerGroup.position.addScaledVector(dir, moveSpeed);
+      }
+      if(keys.backward){
+        workerGroup.position.addScaledVector(dir, -moveSpeed);
+      }
+
+      // الكاميرا خلف العامل
+      const camOffset = new THREE.Vector3(0,9,18);
       const rot = new THREE.Matrix4().makeRotationY(yaw);
       camOffset.applyMatrix4(rot);
       camera.position.copy(workerGroup.position).add(camOffset);
       camera.lookAt(workerGroup.position.clone().add(new THREE.Vector3(0,4,0)));
     }
 
-    // منطق الفحص
+    // HUD
     const panel = document.getElementById("inspect-panel");
     const wellNameEl = document.getElementById("well-name");
     const whpEl = document.getElementById("whp-val");
@@ -420,7 +402,6 @@
     const btnOpen = document.getElementById("btn-open");
     const btnClean = document.getElementById("btn-clean");
     const btnClose = document.getElementById("close-btn");
-
     let currentWell = null;
 
     function calcPressures(w){
@@ -527,7 +508,7 @@
     btnClean.addEventListener("click",cleanCurrent);
     btnClose.addEventListener("click",hidePanel);
 
-    log("كمبيوتر: W/A/S/D + ماوس. موبايل: استخدم الأسهم الكبيرة بالأسفل للحركة وأزرار E/C للفحص والتنظيف.");
+    log("استعمل ↑ / ↓ للتحرك و ← / → للّفّة. أول ما تتحرك شوي راح تشوف البئر AH-0117 جنبك.");
 
     // ربط أزرار اللمس مع الحركة
     function bindTouch(btnId, keyProp){
@@ -541,10 +522,10 @@
       btn.addEventListener("mousedown", start);
       window.addEventListener("mouseup", end);
     }
-    bindTouch("tc-up","w");
-    bindTouch("tc-down","s");
-    bindTouch("tc-left","a");
-    bindTouch("tc-right","d");
+    bindTouch("tc-up","forward");
+    bindTouch("tc-down","backward");
+    bindTouch("tc-left","left");
+    bindTouch("tc-right","right");
 
     document.getElementById("tc-inspect").addEventListener("touchstart", e=>{e.preventDefault();inspectNearest();});
     document.getElementById("tc-clean").addEventListener("touchstart", e=>{e.preventDefault();cleanCurrent();});
